@@ -6,7 +6,7 @@
 
 <br />
 <p align="center">
-  <h3 align="center">Gaming Table Player - </h3>
+  <h3 align="center">Gaming Table Player - Gaming Table module for FoundryVTT</h3>
   <p align="center">
     A module for FoundryVTT to allow for control of a utility-player logged in via a gaming table.
     <br />
