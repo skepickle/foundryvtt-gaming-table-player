@@ -1,4 +1,3 @@
-
 class PullFocus {
 	static init() {
 		this.listen();
@@ -51,7 +50,7 @@ class PullFocus {
 	}
 	static async gamingTablePlayerLoop(){
 		if (game.user.name != game.settings.get('gaming-table-player','player')) {
-			//This should never be reached
+			//This should never be reached but try to catch it anyways.
 			console.log("NOT GAMING TABLE PLAYER: "+ game.settings.get('gaming-table-player','player'));
 			return;
 		}
@@ -70,12 +69,13 @@ class PullFocus {
 		}
 		let releaseOth = true;
 		canvas.activeLayer.selectObjects({}, {releaseOthers: true});
-		for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
-			if (//(!in_combat) ||
-			    (in_combat && (in_combat_id == canvas.tokens.ownedTokens[i].id))) {
-				canvas.tokens.ownedTokens[i].control({releaseOthers: false});
-				releaseOth = false;
-				//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
+		if (in_combat) {
+			for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
+				if (in_combat_id == canvas.tokens.ownedTokens[i].id) {
+					canvas.tokens.ownedTokens[i].control({releaseOthers: false});
+					releaseOth = false;
+					//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
+				}
 			}
 		}
 		//console.log("setTimeout!! " + game.settings.get('gaming-table-player','intervalspeed'))
@@ -102,18 +102,17 @@ var keyDown = (e)=>{
 	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
 	//console.log(e.which)
 	//console.log('pullfocus keyDown')
-	//TODO Make this use a configurable hotkey istead of just T.
 	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player','keymap'));
-	const bind = KeyBinding.eventIsForBinding(e, parsedValue);
+	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player','keymap')));
 	if (bind && game.user.isGM && overCanvas) {
-	//if(e.key == "T" && e.altKey && e.ctrlKey && e.shiftKey && game.user.isGM && overCanvas){
 		//TODO Maybe make sure we're on the right scene before pulling focus.
+		//TODO Maybe allow centering on a token location instead of mouse position.
 		var mouse = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(canvas.tokens);
 		//console.log(mouse);
 	 	PullFocus.pullFocus(mouse);
 	}
 }
-//var pullFocus = () => console.log('pullFocus',mouseX,mouseY);
+
 var overCanvas = true;	
 	
 window.addEventListener('keydown', keyDown);
@@ -126,16 +125,14 @@ Hooks.on('ready',()=>{
 })
 Hooks.on('canvasReady', ()=>{
 	//console.log('test canvasReady asdasdasd')
-	 //window.addEventListener('keydown', keyDown);
-	 CONFIG.debug.hooks = true;
-	 //game.socket.on('pullFocus',pullFocus)
+	//window.addEventListener('keydown', keyDown);
+	CONFIG.debug.hooks = true;
+	//game.socket.on('pullFocus',pullFocus)
 	// game.socket.on('pullFocus',pullFocus);
 	canvas.stage.on('mouseover',(e)=>{
-	
 		overCanvas = true;
 	})
 	canvas.stage.on('mouseout',(e)=>{
-		
 		overCanvas = false;
 	})
 })
