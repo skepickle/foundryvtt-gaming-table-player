@@ -66,15 +66,11 @@ class GamingTablePlayer {
 				}
 			}
 		}
-		let releaseOth = true;
 		canvas.activeLayer.selectObjects({}, {releaseOthers: true});
-		if (in_combat) {
-			for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
-				if (in_combat_id == canvas.tokens.ownedTokens[i].id) {
-					canvas.tokens.ownedTokens[i].control({releaseOthers: false});
-					releaseOth = false;
-					//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
-				}
+		for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
+			if ((in_combat_id == null) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
+				canvas.tokens.ownedTokens[i].control({releaseOthers: false});
+				//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
 			}
 		}
 		//console.log("setTimeout!! " + game.settings.get('gaming-table-player','intervalspeed'))
