@@ -57,12 +57,11 @@ class GamingTablePlayer {
 		let in_combat = false;
 		let in_combat_id = null;
 		for (let i = 0; i < game.combats.apps.length; i++) {
-			if ((game.combats.apps[i].combat) &&
-			    (game.combats.apps[i].combat.started)) {
+			if ((game.combats.apps[i].combat) && (game.combats.apps[i].combat.started)) {
 				for (let j = 0; j < canvas.tokens.ownedTokens.length; j++) {
 					if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].combat.current.tokenId) {
-				          in_combat = true;
-				          in_combat_id = game.combats.apps[i].combat.current.tokenId;
+						in_combat = true;
+						in_combat_id = game.combats.apps[i].combat.current.tokenId;
 					}
 				}
 			}
