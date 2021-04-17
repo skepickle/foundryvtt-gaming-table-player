@@ -7,7 +7,8 @@
   "minimumCoreVersion": "0.6.5",
   "compatibleCoreVersion":"0.6.6",
   "scripts": [
-  	"gaming-table-player.js"
+	"./libs/settings-extender.js",
+	"./gaming-table-player.js"
   ],
   "socket": true,
   "url":"https://github.com/skepickle/foundryvtt-gaming-table-player",
