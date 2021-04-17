@@ -1,4 +1,4 @@
-class PullFocus {
+class GamingTablePlayer {
 	static init() {
 		this.listen();
 		game.settings.register('gaming-table-player', 'player', {
@@ -80,7 +80,7 @@ class PullFocus {
 		}
 		//console.log("setTimeout!! " + game.settings.get('gaming-table-player','intervalspeed'))
 		setTimeout(function() {
-			PullFocus.gamingTablePlayerLoop();
+			GamingTablePlayer.gamingTablePlayerLoop();
 		}, game.settings.get('gaming-table-player','intervalspeed'));
 	}
 	static async listen(){
@@ -109,7 +109,7 @@ var keyDown = (e)=>{
 		//TODO Maybe allow centering on a token location instead of mouse position.
 		var mouse = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(canvas.tokens);
 		//console.log(mouse);
-	 	PullFocus.pullFocus(mouse);
+		GamingTablePlayer.pullFocus(mouse);
 	}
 }
 
@@ -121,7 +121,7 @@ Hooks.on('init',()=>{
 	
 })
 Hooks.on('ready',()=>{
-	PullFocus.init();
+	GamingTablePlayer.init();
 })
 Hooks.on('canvasReady', ()=>{
 	//console.log('test canvasReady asdasdasd')
