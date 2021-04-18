@@ -26,6 +26,22 @@ class GamingTablePlayer {
 			//onChange: x => window.location.reload()
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'keymap', {
+			name: "Keymap",
+			hint: "Enter the keymap used to pull focus on the gaming table",
+			scope: "world",
+			default: "t",
+			type: window.Azzu.SettingsTypes.KeyBinding,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'selecttokens', {
+			name: "Select Tokens",
+			hint: "Select all tokens that the gaming table player owns.",
+			scope: "world",
+			default: true,
+			type: Boolean,
+			config: true
+		});
 		game.settings.register('gaming-table-player', 'intervalspeed', {
 			name: "Refresh Duration (in MS)",
 			hint: "How fast or slow to refresh gaming table token selections. (1000ms = 1 second)",
@@ -33,14 +49,6 @@ class GamingTablePlayer {
 			default: 5000,
 			type: Number,
 			//onChange: x => window.location.reload()
-			config: true
-		});
-		game.settings.register('gaming-table-player', 'keymap', {
-			name: "Keymap",
-			hint: "Enter the keymap used to pull focus on the gaming table",
-			scope: "world",
-			default: "t",
-			type: window.Azzu.SettingsTypes.KeyBinding,
 			config: true
 		});
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
