@@ -90,8 +90,11 @@ class GamingTablePlayer {
 	}
 	static async listen(){
 		game.socket.on('module.gaming-table-player',async data => {
-			this.gamingTablePlayerLoop();
+			if (game.scenes.viewed.data._id != data.scene_id) {
+				return;
+			}
 			if (game.user.name == game.settings.get('gaming-table-player','player')) {
+				this.gamingTablePlayerLoop();
 				canvas.animatePan(data.pan)
 			}
 		});
@@ -101,6 +104,7 @@ class GamingTablePlayer {
 		focusdata.pan = mouse;
 		focusdata.pan.scale    = game.settings.get('gaming-table-player','panscale');
 		focusdata.pan.duration = game.settings.get('gaming-table-player','panspeed');
+		focusdata.scene_id     = game.scenes.viewed.data._id;
 		game.socket.emit('module.gaming-table-player',focusdata)
 	}
 }
@@ -112,7 +116,6 @@ var keyDown = (e)=>{
 	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player','keymap'));
 	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player','keymap')));
 	if (bind && game.user.isGM && overCanvas) {
-		//TODO Maybe make sure we're on the right scene before pulling focus.
 		//TODO Maybe allow centering on a token location instead of mouse position.
 		var mouse = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(canvas.tokens);
 		//console.log(mouse);
