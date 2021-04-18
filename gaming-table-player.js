@@ -62,23 +62,25 @@ class GamingTablePlayer {
 			console.log("NOT GAMING TABLE PLAYER: "+ game.settings.get('gaming-table-player','player'));
 			return;
 		}
-		let in_combat = false;
-		let in_combat_id = null;
-		for (let i = 0; i < game.combats.apps.length; i++) {
-			if ((game.combats.apps[i].combat) && (game.combats.apps[i].combat.started)) {
-				for (let j = 0; j < canvas.tokens.ownedTokens.length; j++) {
-					if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].combat.current.tokenId) {
-						in_combat = true;
-						in_combat_id = game.combats.apps[i].combat.current.tokenId;
+		if (game.settings.get('gaming-table-player','selecttokens')) {
+			let in_combat = false;
+			let in_combat_id = null;
+			for (let i = 0; i < game.combats.apps.length; i++) {
+				if ((game.combats.apps[i].combat) && (game.combats.apps[i].combat.started)) {
+					for (let j = 0; j < canvas.tokens.ownedTokens.length; j++) {
+						if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].combat.current.tokenId) {
+							in_combat = true;
+							in_combat_id = game.combats.apps[i].combat.current.tokenId;
+						}
 					}
 				}
 			}
-		}
-		canvas.activeLayer.selectObjects({}, {releaseOthers: true});
-		for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
-			if ((in_combat_id == null) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
-				canvas.tokens.ownedTokens[i].control({releaseOthers: false});
-				//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
+			canvas.activeLayer.selectObjects({}, {releaseOthers: true});
+			for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
+				if ((in_combat_id == null) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
+					canvas.tokens.ownedTokens[i].control({releaseOthers: false});
+					//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
+				}
 			}
 		}
 		//console.log("setTimeout!! " + game.settings.get('gaming-table-player','intervalspeed'))
