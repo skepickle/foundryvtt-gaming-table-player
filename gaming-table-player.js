@@ -92,14 +92,16 @@ class GamingTablePlayer {
 		game.socket.on('module.gaming-table-player',async data => {
 			this.gamingTablePlayerLoop();
 			if (game.user.name == game.settings.get('gaming-table-player','player')) {
-				canvas.animatePan(data)
+				canvas.animatePan(data.pan)
 			}
 		});
 	}
-	static async pullFocus(data){
-		data.scale    = game.settings.get('gaming-table-player','panscale');
-		data.duration = game.settings.get('gaming-table-player','panspeed');
-		game.socket.emit('module.gaming-table-player',data)
+	static async pullFocus(mouse){
+		var focusdata = new Object();
+		focusdata.pan = mouse;
+		focusdata.pan.scale    = game.settings.get('gaming-table-player','panscale');
+		focusdata.pan.duration = game.settings.get('gaming-table-player','panspeed');
+		game.socket.emit('module.gaming-table-player',focusdata)
 	}
 }
 
