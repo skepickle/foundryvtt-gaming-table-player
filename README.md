@@ -30,7 +30,7 @@ Gaming Table Player is a module for Foundry VTT by Skepickle and is licensed und
 
 This work is licensed under Foundry Virtual Tabletop [EULA - Limited License Agreement for module development from May 29, 2020](https://foundryvtt.com/article/license/).
 
-[foundry-shield]: https://img.shields.io/badge/Foundry-v0.8.8-informational
+[foundry-shield]: https://img.shields.io/badge/Foundry-v9-informational
 [foundry-url]: https://foundryvtt.com/
 [forks-shield]: https://img.shields.io/github/forks/skepickle/foundryvtt-gaming-table-player.svg?style=flat-square
 [forks-url]: https://github.com/skepickle/foundryvtt-gaming-table-player/network/members
