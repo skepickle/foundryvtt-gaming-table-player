@@ -90,7 +90,7 @@ class GamingTablePlayer {
 	}
 	static async listen(){
 		game.socket.on('module.gaming-table-player',async data => {
-			if (game.scenes.viewed.data._id != data.scene_id) {
+			if (game.scenes.viewed._id != data.scene_id) {
 				return;
 			}
 			if (game.user.name == game.settings.get('gaming-table-player','player')) {
@@ -104,7 +104,7 @@ class GamingTablePlayer {
 		focusdata.pan = mouse;
 		focusdata.pan.scale    = game.settings.get('gaming-table-player','panscale');
 		focusdata.pan.duration = game.settings.get('gaming-table-player','panspeed');
-		focusdata.scene_id     = game.scenes.viewed.data._id;
+		focusdata.scene_id     = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player',focusdata)
 	}
 }
