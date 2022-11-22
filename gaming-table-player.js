@@ -66,18 +66,20 @@ class GamingTablePlayer {
 			let in_combat = false;
 			let in_combat_id = null;
 			for (let i = 0; i < game.combats.apps.length; i++) {
-				if ((game.combats.apps[i].combat) && (game.combats.apps[i].combat.started)) {
+				if ((game.combats.apps[i].viewed != null) && (game.combats.apps[i].viewed.active)) {
+					let t = game.combats.apps[i].viewed.turn
 					for (let j = 0; j < canvas.tokens.ownedTokens.length; j++) {
-						if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].combat.current.tokenId) {
+						if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].viewed.turns[t].tokenId) {
 							in_combat = true;
-							in_combat_id = game.combats.apps[i].combat.current.tokenId;
+							in_combat_id = game.combats.apps[i].viewed.turns[t].tokenId;
+							//console.log("IN COMBAT : "+game.combats.apps[i].viewed.turns[t].tokenId);
 						}
 					}
 				}
 			}
 			canvas.activeLayer.selectObjects({}, {releaseOthers: true});
 			for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
-				if ((in_combat_id == null) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
+				if ((!in_combat) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
 					canvas.tokens.ownedTokens[i].control({releaseOthers: false});
 					//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
 				}

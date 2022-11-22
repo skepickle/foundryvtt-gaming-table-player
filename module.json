@@ -2,7 +2,7 @@
   "id": "gaming-table-player",
   "title": "Gaming Table Player",
   "description": "Gamemaster can use a hotkey to center a designated user's view of the map, and set the zoom factor.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Skepickle",
   "authors": [
     {
