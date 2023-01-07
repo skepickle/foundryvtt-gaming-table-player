@@ -2,7 +2,7 @@
   "id": "gaming-table-player",
   "title": "Gaming Table Player",
   "description": "Gamemaster can use a hotkey to center a designated user's view of the map, and set the zoom factor.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Skepickle",
   "authors": [
     {
@@ -14,11 +14,11 @@
   "compatibleCoreVersion":"10",
   "compatibility": {
     "minimum": "10",
-    "verified":"10",
-    "maximum":"10"
+    "verified": "10",
+    "maximum": "10"
   },
   "scripts": [
-	"./gaming-table-player.js"
+    "./gaming-table-player.js"
   ],
   "dependencies": [
     {
@@ -30,16 +30,16 @@
     "requires": [
       {
         "id": "settings-extender",
-	"type": "module",
-	"compatibility": {
+        "type": "module",
+        "compatibility": {
           "verified": "1.2.1"
-	}
+        }
       }
     ]
   },
   "socket": true,
-  "url":"https://github.com/skepickle/foundryvtt-gaming-table-player",
-  "manifest":"https://raw.githubusercontent.com/skepickle/foundryvtt-gaming-table-player/master/module.json",
-  "download":"https://github.com/skepickle/foundryvtt-gaming-table-player/archive/0.0.8.zip",
-  "readme":"https://raw.githubusercontent.com/skepickle/foundryvtt-gaming-table-player/master/README.md"
+  "url": "https://github.com/skepickle/foundryvtt-gaming-table-player",
+  "manifest": "https://raw.githubusercontent.com/skepickle/foundryvtt-gaming-table-player/master/module.json",
+  "download": "https://github.com/skepickle/foundryvtt-gaming-table-player/archive/1.0.3.zip",
+  "readme": "https://raw.githubusercontent.com/skepickle/foundryvtt-gaming-table-player/master/README.md"
 }
