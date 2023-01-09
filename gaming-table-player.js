@@ -52,7 +52,6 @@ class GamingTablePlayer {
 			config: true
 		});
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
-			//console.log("setTimeout! " + game.settings.get('gaming-table-player','intervalspeed'));
 			setTimeout(this.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
 		}
 	}
@@ -64,28 +63,33 @@ class GamingTablePlayer {
 		}
 		if (game.settings.get('gaming-table-player','selecttokens')) {
 			let in_combat = false;
-			let in_combat_id = null;
-			for (let i = 0; i < game.combats.apps.length; i++) {
-				if ((game.combats.apps[i].viewed != null) && (game.combats.apps[i].viewed.active)) {
-					let t = game.combats.apps[i].viewed.turn
-					for (let j = 0; j < canvas.tokens.ownedTokens.length; j++) {
-						if (canvas.tokens.ownedTokens[j].id == game.combats.apps[i].viewed.turns[t].tokenId) {
-							in_combat = true;
-							in_combat_id = game.combats.apps[i].viewed.turns[t].tokenId;
-							//console.log("IN COMBAT : "+game.combats.apps[i].viewed.turns[t].tokenId);
+			let turnTokenIds = [];
+
+			let ownedTokens = canvas.tokens.ownedTokens.slice();
+			let ownedTokenIds = [];
+			for (let t = 0; t < ownedTokens.length; t++) {
+				ownedTokenIds.push(ownedTokens[t].id);
+			}
+
+			let apps = game.combats.apps.slice();
+			for (let a = 0; a < apps.length; a++) {
+				let combats = apps[a].combats.slice();
+				for (let c = 0; c < combats.length; c++) {
+					if (combats[c].turn != null) {
+						in_combat = true;
+						if (ownedTokenIds.includes(combats[c].turns[combats[c].turn].tokenId)) {
+							turnTokenIds.push(combats[c].turns[combats[c].turn].tokenId);
 						}
 					}
 				}
 			}
 			canvas.activeLayer.selectObjects({}, {releaseOthers: true});
-			for (let i = 0; i < canvas.tokens.ownedTokens.length; i++) {
-				if ((!in_combat) || (in_combat_id == canvas.tokens.ownedTokens[i].id)) {
-					canvas.tokens.ownedTokens[i].control({releaseOthers: false});
-					//console.log("GAME TABLE : "+canvas.tokens.ownedTokens[i].name);
+			for (let t = 0; t < ownedTokens.length; t++) {
+				if ((turnTokenIds.length == 0) || turnTokenIds.includes(ownedTokens[t].id)) {
+					ownedTokens[t].control({releaseOthers: false});
 				}
 			}
 		}
-		//console.log("setTimeout!! " + game.settings.get('gaming-table-player','intervalspeed'))
 		setTimeout(function() {
 			GamingTablePlayer.gamingTablePlayerLoop();
 		}, game.settings.get('gaming-table-player','intervalspeed'));
@@ -113,14 +117,11 @@ class GamingTablePlayer {
 
 var keyDown = (e)=>{
 	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
-	//console.log(e.which)
-	//console.log('pullfocus keyDown')
 	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player','keymap'));
 	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player','keymap')));
 	if (bind && game.user.isGM && overCanvas) {
 		//TODO Maybe allow centering on a token location instead of mouse position.
 		var mouse = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(canvas.tokens);
-		//console.log(mouse);
 		GamingTablePlayer.pullFocus(mouse);
 	}
 }
@@ -136,11 +137,7 @@ Hooks.on('ready',()=>{
 	GamingTablePlayer.init();
 })
 Hooks.on('canvasReady', ()=>{
-	//console.log('test canvasReady asdasdasd')
-	//window.addEventListener('keydown', keyDown);
 	CONFIG.debug.hooks = true;
-	//game.socket.on('pullFocus',pullFocus)
-	// game.socket.on('pullFocus',pullFocus);
 	canvas.stage.on('mouseover',(e)=>{
 		overCanvas = true;
 	})
@@ -148,5 +145,4 @@ Hooks.on('canvasReady', ()=>{
 		overCanvas = false;
 	})
 })
-
 
