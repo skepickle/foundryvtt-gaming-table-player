@@ -109,7 +109,6 @@ class GamingTablePlayer {
 		var focusdata = new Object();
 		focusdata.pan = mouse;
 		focusdata.pan.scale    = game.settings.get('gaming-table-player','panscale');
-		focusdata.pan.duration = game.settings.get('gaming-table-player','panspeed');
 		focusdata.scene_id     = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player',focusdata)
 	}
@@ -121,7 +120,7 @@ var keyDown = (e)=>{
 	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player','keymap')));
 	if (bind && game.user.isGM && overCanvas) {
 		//TODO Maybe allow centering on a token location instead of mouse position.
-		var mouse = canvas.app.renderer.plugins.interaction.mouse.getLocalPosition(canvas.tokens);
+		var mouse = canvas.mousePosition;
 		GamingTablePlayer.pullFocus(mouse);
 	}
 }
