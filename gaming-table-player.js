@@ -9,21 +9,12 @@ class GamingTablePlayer {
 			type: String,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'panscale', {
-			name: "Pan Scale",
+		game.settings.register('gaming-table-player', 'scale', {
+			name: "Scale",
 			hint: "The scale at which the map should be locked",
 			scope: "world",
 			default: 0.5,
 			type: Number,
-			config: true
-		});
-		game.settings.register('gaming-table-player', 'panspeed', {
-			name: "Pan Duration (in MS)",
-			hint: "How fast or slow to transition to focus point. (1000ms = 1 second)",
-			scope: "world",
-			default: 250,
-			type: Number,
-			//onChange: x => window.location.reload()
 			config: true
 		});
 		game.settings.register('gaming-table-player', 'keymap', {
@@ -108,7 +99,7 @@ class GamingTablePlayer {
 	static async pullFocus(mouse){
 		var focusdata = new Object();
 		focusdata.pan = mouse;
-		focusdata.pan.scale    = game.settings.get('gaming-table-player','panscale');
+		focusdata.pan.scale    = game.settings.get('gaming-table-player','scale');
 		focusdata.scene_id     = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player',focusdata)
 	}
