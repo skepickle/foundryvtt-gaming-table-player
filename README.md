@@ -26,6 +26,8 @@ Can change the speed of the transition in settings.
 
 Can choose to hide FoundryVTT UI elements from gaming table player's view.
 
+Can choose to override FoundryVTT's core "Pan Canvas to Ping" functionality for the gaming table player.
+
 ## License
 
 Gaming Table Player is a module for Foundry VTT by Skepickle and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
