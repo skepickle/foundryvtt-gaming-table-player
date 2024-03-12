@@ -1,6 +1,8 @@
 class GamingTablePlayer {
+	static hidui = false;
+	static wrappedping = false;
+	static timestamp = 0;
 	static init() {
-		this.listen();
 		game.settings.register('gaming-table-player', 'player', {
 			name: "Gaming Table's Player Name",
 			hint: "The user name of the player who's session is being displayed on the gaming table",
@@ -13,7 +15,7 @@ class GamingTablePlayer {
 			name: "Scale",
 			hint: "The scale at which the map should be locked",
 			scope: "world",
-			default: 0.5,
+			default: 1.0,
 			type: Number,
 			config: true
 		});
@@ -29,13 +31,13 @@ class GamingTablePlayer {
 			name: "Select Tokens",
 			hint: "Select all tokens that the gaming table player owns.",
 			scope: "world",
-			default: true,
+			default: false,
 			type: Boolean,
 			config: true
 		});
 		game.settings.register('gaming-table-player', 'intervalspeed', {
-			name: "Refresh Duration (in MS)",
-			hint: "How fast or slow to refresh gaming table token selections. (1000ms = 1 second)",
+			name: "Refresh Duration (in milliseconds)",
+			hint: "How fast to refresh gaming table view. (1000 ms = 1 second)",
 			scope: "world",
 			default: 5000,
 			type: Number,
@@ -62,53 +64,83 @@ class GamingTablePlayer {
 			ui.notifications.error("Module XYZ requires the 'libWrapper' module. Please install and activate it.");
 		}
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
-			this.hidui = false;
-			this.wrappedping = false;
-			setTimeout(this.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
+			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
+			GamingTablePlayer.listen();
 		}
 	}
 	static async gamingTablePlayerLoop(){
+		let now = Date.now();
+		//console.log("gamingTablePlayerLoop() @ "+now);
+		GamingTablePlayer.timestamp = now;
 		if (game.user.name != game.settings.get('gaming-table-player','player')) {
 			//This should never be reached but try to catch it anyways.
-			console.log("NOT GAMING TABLE PLAYER: "+ game.settings.get('gaming-table-player','player'));
+			console.warn("Error: Gaming Table Player (set to "+game.settings.get('gaming-table-player','player')+") main loop executed as user "+game.user.name);
 			return;
 		}
 		if (game.settings.get('gaming-table-player','nopan2ping')) {
-			if (!this.wrappedping) {
-				libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
-						if (args.length >= 3) {
-							args[2].pull = false;
-						}
-						let result = wrapped(...args);
-						return result;
-				}, 'WRAPPER' );
-				this.wrappedping = true;
+			if (!GamingTablePlayer.wrappedping) {
+				let try_again = false;
+				try {
+					libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
+							if (args.length >= 3) {
+								args[2].pull = false;
+							}
+							let result = wrapped(...args);
+							return result;
+					}, 'WRAPPER' );
+					GamingTablePlayer.wrappedping = true;
+				} catch (error) {
+					try_again = true;
+				}
+				if (try_again) {
+				try {
+					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+				} catch (error) {
+					console.warn("libWrapper.unregister() threw an exception");
+				}
+				try {
+					libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
+							if (args.length >= 3) {
+								args[2].pull = false;
+							}
+							let result = wrapped(...args);
+							return result;
+					}, 'WRAPPER' );
+					GamingTablePlayer.wrappedping = true;
+				} catch (error) {
+					console.warn("libWrapper.register() threw an exception");
+				}
+				}
 			}
 		} else {
-			if (this.wrappedping) {
-				libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing', fail=true);
-				this.wrappedping = false;
+			if (GamingTablePlayer.wrappedping) {
+				try {
+					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+				} catch (error) {
+					console.warn("libWrapper.unregister() threw an exception");
+				}
+				GamingTablePlayer.wrappedping = false;
 			}
 		}
 		if (game.settings.get('gaming-table-player','hideui')) {
-			if (!this.hidui) {
+			if (!GamingTablePlayer.hidui) {
 				$("#players").hide();
 				$("#logo").hide();
 				$("#hotbar").hide();
 				$("#navigation").hide();
 				$("#controls").hide();
 				$("#sidebar").hide();
-				this.hidui = true;
+				GamingTablePlayer.hidui = true;
 			}
 		} else {
-			if (this.hidui) {
+			if (GamingTablePlayer.hidui) {
 				$("#players").show();
 				$("#logo").show();
 				$("#hotbar").show();
 				$("#navigation").show();
 				$("#controls").show();
 				$("#sidebar").show();
-				this.hidui = false;
+				GamingTablePlayer.hidui = false;
 			}
 		}
 		if (game.settings.get('gaming-table-player','selecttokens')) {
@@ -150,12 +182,15 @@ class GamingTablePlayer {
 				return;
 			}
 			if (game.user.name == game.settings.get('gaming-table-player','player')) {
-				this.gamingTablePlayerLoop();
+				if (Date.now() - GamingTablePlayer.timestamp > game.settings.get('gaming-table-player','intervalspeed') * 3) {
+					GamingTablePlayer.gamingTablePlayerLoop();
+				}
 				canvas.animatePan(data.pan)
 			}
 		});
 	}
 	static async pullFocus(mouse){
+		// Called from GM session
 		var focusdata = new Object();
 		focusdata.pan = mouse;
 		focusdata.pan.scale    = game.settings.get('gaming-table-player','scale');
@@ -163,6 +198,8 @@ class GamingTablePlayer {
 		game.socket.emit('module.gaming-table-player',focusdata)
 	}
 }
+
+var overCanvas = true;
 
 var keyDown = (e)=>{
 	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
@@ -175,23 +212,21 @@ var keyDown = (e)=>{
 	}
 }
 
-var overCanvas = true;	
-	
 window.addEventListener('keydown', keyDown);
 
-Hooks.on('init',()=>{
-	
-})
+//Hooks.on('init',()=>{
+//
+//})
 Hooks.on('ready',()=>{
 	GamingTablePlayer.init();
 })
-Hooks.on('canvasReady', ()=>{
-	CONFIG.debug.hooks = true;
-	canvas.stage.on('mouseover',(e)=>{
-		overCanvas = true;
+if (game.user.isGM) {
+	Hooks.on('canvasReady', ()=>{
+		canvas.stage.on('mouseover',(e)=>{
+			overCanvas = true;
+		})
+		canvas.stage.on('mouseout',(e)=>{
+			overCanvas = false;
+		})
 	})
-	canvas.stage.on('mouseout',(e)=>{
-		overCanvas = false;
-	})
-})
-
+}
