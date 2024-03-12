@@ -19,6 +19,30 @@ class GamingTablePlayer {
 			type: Number,
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'autoScale', {
+			name: "Auto Scale",
+			hint: "Set the scale based on physical size of the gaming table",
+			scope: "world",
+			default: false,
+			type: Boolean,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'autoScaleWidth', {
+			name: "Gaming Table width (cm/mm/inches)",
+			hint: "Enter the Gaming Table width using your preferred unit. For example 950mm",
+			scope: "world",
+			default: 950,
+			type: Number,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'autoScaleGrid', {
+			name: "Grid width (cm/mm/inches)",
+			hint: "Enter the desired grid width, use the same unit as the gaming table width.For example 25mm",
+			scope: "world",
+			default: 25,
+			type: Number,
+			config: true
+		});
 		game.settings.register('gaming-table-player', 'keymap', {
 			name: "Keymap",
 			hint: "Enter the keymap used to pull focus on the gaming table",
@@ -63,53 +87,53 @@ class GamingTablePlayer {
 		if (!game.modules.get('lib-wrapper')?.active && game.user.isGM) {
 			ui.notifications.error("Module XYZ requires the 'libWrapper' module. Please install and activate it.");
 		}
-		if (game.user.name == game.settings.get('gaming-table-player','player')) {
-			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
+		if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'intervalspeed'));
 			GamingTablePlayer.listen();
 		}
 	}
-	static async gamingTablePlayerLoop(){
+	static async gamingTablePlayerLoop() {
 		let now = Date.now();
 		//console.log("gamingTablePlayerLoop() @ "+now);
 		GamingTablePlayer.timestamp = now;
-		if (game.user.name != game.settings.get('gaming-table-player','player')) {
+		if (game.user.name != game.settings.get('gaming-table-player', 'player')) {
 			//This should never be reached but try to catch it anyways.
-			console.warn("Error: Gaming Table Player (set to "+game.settings.get('gaming-table-player','player')+") main loop executed as user "+game.user.name);
+			console.warn("Error: Gaming Table Player (set to " + game.settings.get('gaming-table-player', 'player') + ") main loop executed as user " + game.user.name);
 			return;
 		}
-		if (game.settings.get('gaming-table-player','nopan2ping')) {
+		if (game.settings.get('gaming-table-player', 'nopan2ping')) {
 			if (!GamingTablePlayer.wrappedping) {
 				let try_again = false;
 				try {
 					libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
-							if (args.length >= 3) {
-								args[2].pull = false;
-							}
-							let result = wrapped(...args);
-							return result;
-					}, 'WRAPPER' );
+						if (args.length >= 3) {
+							args[2].pull = false;
+						}
+						let result = wrapped(...args);
+						return result;
+					}, 'WRAPPER');
 					GamingTablePlayer.wrappedping = true;
 				} catch (error) {
 					try_again = true;
 				}
 				if (try_again) {
-				try {
-					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
-				} catch (error) {
-					console.warn("libWrapper.unregister() threw an exception");
-				}
-				try {
-					libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
+					try {
+						libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+					} catch (error) {
+						console.warn("libWrapper.unregister() threw an exception");
+					}
+					try {
+						libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
 							if (args.length >= 3) {
 								args[2].pull = false;
 							}
 							let result = wrapped(...args);
 							return result;
-					}, 'WRAPPER' );
-					GamingTablePlayer.wrappedping = true;
-				} catch (error) {
-					console.warn("libWrapper.register() threw an exception");
-				}
+						}, 'WRAPPER');
+						GamingTablePlayer.wrappedping = true;
+					} catch (error) {
+						console.warn("libWrapper.register() threw an exception");
+					}
 				}
 			}
 		} else {
@@ -122,7 +146,7 @@ class GamingTablePlayer {
 				GamingTablePlayer.wrappedping = false;
 			}
 		}
-		if (game.settings.get('gaming-table-player','hideui')) {
+		if (game.settings.get('gaming-table-player', 'hideui')) {
 			if (!GamingTablePlayer.hidui) {
 				$("#players").hide();
 				$("#logo").hide();
@@ -143,7 +167,7 @@ class GamingTablePlayer {
 				GamingTablePlayer.hidui = false;
 			}
 		}
-		if (game.settings.get('gaming-table-player','selecttokens')) {
+		if (game.settings.get('gaming-table-player', 'selecttokens')) {
 			let in_combat = false;
 			let turnTokenIds = [];
 
@@ -165,46 +189,56 @@ class GamingTablePlayer {
 					}
 				}
 			}
-			canvas.activeLayer.selectObjects({}, {releaseOthers: true});
+			canvas.activeLayer.selectObjects({}, { releaseOthers: true });
 			for (let t = 0; t < ownedTokens.length; t++) {
 				if ((turnTokenIds.length == 0) || turnTokenIds.includes(ownedTokens[t].id)) {
-					ownedTokens[t].control({releaseOthers: false});
+					ownedTokens[t].control({ releaseOthers: false });
 				}
 			}
 		}
-		setTimeout(function() {
+		setTimeout(function () {
 			GamingTablePlayer.gamingTablePlayerLoop();
-		}, game.settings.get('gaming-table-player','intervalspeed'));
+		}, game.settings.get('gaming-table-player', 'intervalspeed'));
 	}
-	static async listen(){
-		game.socket.on('module.gaming-table-player',async data => {
+	static async listen() {
+		game.socket.on('module.gaming-table-player', async data => {
 			if (game.scenes.viewed._id != data.scene_id) {
 				return;
 			}
-			if (game.user.name == game.settings.get('gaming-table-player','player')) {
-				if (Date.now() - GamingTablePlayer.timestamp > game.settings.get('gaming-table-player','intervalspeed') * 3) {
+			if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+				if (Date.now() - GamingTablePlayer.timestamp > game.settings.get('gaming-table-player', 'intervalspeed') * 3) {
 					GamingTablePlayer.gamingTablePlayerLoop();
 				}
 				canvas.animatePan(data.pan)
 			}
 		});
 	}
-	static async pullFocus(mouse){
+	static async pullFocus(mouse) {
+		let scale = game.settings.get('gaming-table-player', 'scale');
+		if (game.settings.get('gaming-table-player', 'autoScale')) {
+			let monitorWidth = game.settings.get('gaming-table-player', 'autoScaleWidth');
+			let gridWidth = game.settings.get('gaming-table-player', 'autoScaleGrid');
+			let screenResolution = screen.width; // this will be 1920px for full hd, 2560px for 2k and so on...
+			let squares = monitorWidth / gridWidth; // how many grid quares should be on the screen
+			let pixelsPerGrid = screenResolution / squares; // how many pixels should a square contain
+			scale = pixelsPerGrid / canvas.scene.grid.size; // we finally get the scale
+		}
 		// Called from GM session
 		var focusdata = new Object();
 		focusdata.pan = mouse;
-		focusdata.pan.scale    = game.settings.get('gaming-table-player','scale');
-		focusdata.scene_id     = game.scenes.viewed._id;
-		game.socket.emit('module.gaming-table-player',focusdata)
+		focusdata.pan.scale = game.settings.get('gaming-table-player', 'scale');
+		focusdata.pan.scale = scale;
+		focusdata.scene_id = game.scenes.viewed._id;
+		game.socket.emit('module.gaming-table-player', focusdata)
 	}
 }
 
 var overCanvas = true;
 
-var keyDown = (e)=>{
+var keyDown = (e) => {
 	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
-	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player','keymap'));
-	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player','keymap')));
+	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap'));
+	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap')));
 	if (bind && game.user.isGM && overCanvas) {
 		//TODO Maybe allow centering on a token location instead of mouse position.
 		var mouse = canvas.mousePosition;
@@ -217,15 +251,15 @@ window.addEventListener('keydown', keyDown);
 //Hooks.on('init',()=>{
 //
 //})
-Hooks.on('ready',()=>{
+Hooks.on('ready', () => {
 	GamingTablePlayer.init();
 })
 if (game.user.isGM) {
-	Hooks.on('canvasReady', ()=>{
-		canvas.stage.on('mouseover',(e)=>{
+	Hooks.on('canvasReady', () => {
+		canvas.stage.on('mouseover', (e) => {
 			overCanvas = true;
 		})
-		canvas.stage.on('mouseout',(e)=>{
+		canvas.stage.on('mouseout', (e) => {
 			overCanvas = false;
 		})
 	})
