@@ -50,8 +50,20 @@ class GamingTablePlayer {
 			type: Boolean,
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'nopan2ping', {
+			name: "Do Not Pan Canvas to Ping",
+			hint: "Enable this option in order to prevent GM from panning the Gaming Table Player's canvas to a ping",
+			scope: "world",
+			default: false,
+			type: Boolean,
+			config: true
+		});
+		if (!game.modules.get('lib-wrapper')?.active && game.user.isGM) {
+			ui.notifications.error("Module XYZ requires the 'libWrapper' module. Please install and activate it.");
+		}
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
 			this.hidui = false;
+			this.wrappedping = false;
 			setTimeout(this.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
 		}
 	}
@@ -60,6 +72,23 @@ class GamingTablePlayer {
 			//This should never be reached but try to catch it anyways.
 			console.log("NOT GAMING TABLE PLAYER: "+ game.settings.get('gaming-table-player','player'));
 			return;
+		}
+		if (game.settings.get('gaming-table-player','nopan2ping')) {
+			if (!this.wrappedping) {
+				libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing', function (wrapped, ...args) {
+						if (args.length >= 3) {
+							args[2].pull = false;
+						}
+						let result = wrapped(...args);
+						return result;
+				}, 'WRAPPER' );
+				this.wrappedping = true;
+			}
+		} else {
+			if (this.wrappedping) {
+				libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing', fail=true);
+				this.wrappedping = false;
+			}
 		}
 		if (game.settings.get('gaming-table-player','hideui')) {
 			if (!this.hidui) {
