@@ -42,7 +42,16 @@ class GamingTablePlayer {
 			//onChange: x => window.location.reload()
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'hideui', {
+			name: "Hide UI Elements",
+			hint: "Enable this option in order to have the Gaming Table Player hide all FoundryVTT UI elements",
+			scope: "world",
+			default: false,
+			type: Boolean,
+			config: true
+		});
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
+			this.hidui = false;
 			setTimeout(this.gamingTablePlayerLoop, game.settings.get('gaming-table-player','intervalspeed'));
 		}
 	}
@@ -51,6 +60,27 @@ class GamingTablePlayer {
 			//This should never be reached but try to catch it anyways.
 			console.log("NOT GAMING TABLE PLAYER: "+ game.settings.get('gaming-table-player','player'));
 			return;
+		}
+		if (game.settings.get('gaming-table-player','hideui')) {
+			if (!this.hidui) {
+				$("#players").hide();
+				$("#logo").hide();
+				$("#hotbar").hide();
+				$("#navigation").hide();
+				$("#controls").hide();
+				$("#sidebar").hide();
+				this.hidui = true;
+			}
+		} else {
+			if (this.hidui) {
+				$("#players").show();
+				$("#logo").show();
+				$("#hotbar").show();
+				$("#navigation").show();
+				$("#controls").show();
+				$("#sidebar").show();
+				this.hidui = false;
+			}
 		}
 		if (game.settings.get('gaming-table-player','selecttokens')) {
 			let in_combat = false;
