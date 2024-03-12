@@ -8,7 +8,7 @@
 <p align="center">
   <h3 align="center">Gaming Table Player - Gaming Table module for FoundryVTT</h3>
   <p align="center">
-    A module for FoundryVTT to allow for control of a utility-player logged in via a gaming table.
+    A module for FoundryVTT to allow for remote control of a gaming table.
     <br />
     <br />
     <a href="https://github.com/skepickle/foundryvtt-gaming-table-player/issues">Report Bug / Request Feature</a>
@@ -16,17 +16,25 @@
 </p>
 
 # Gaming Table Player
-Forces a designated user's view to focus on a specific point, with a configurable zoom scale.
+Forces a designated player's view to focus on a specific point in a scene, with a configurable zoom scale, using a configurable hotkey that the GM can use.
 
-Press 'T' (or configurable hotkey) on the canvas and the designated user will be panned and zoomed to where your mouse is located.
+The GM can press the hotkey while their mouse pointer is over a spot in the scene that is active for the designated player. When this is done, the designated player's view will be panned and zoomed to where the GM's mouse is located.
 
-Also, the designated user will always select all tokens on the board for which it has "owner" permission. This allows the gaming table to always show the combined vision for the player-characters. During combat, this behavior is changed to only show the vision for the player character who has the current turn. If it is the turn of a character not owned by the designated user, then the behavior goes back to showing the combined vision for all the player characters.
+The refresh duration that the designated player's view is updated when not triggered by the GM using the hotkey is configurable in the module settings. The default is 5 seconds (5000ms)
 
-Can change the speed of the transition in settings.
+In addition to this behavior, there are also some optional behaviors that can be enabled via checkboxes in the Gaming Table Player settings configurations:
 
-Can choose to hide FoundryVTT UI elements from gaming table player's view.
+## Select Tokens
 
-Can choose to override FoundryVTT's core "Pan Canvas to Ping" functionality for the gaming table player.
+When this option is enabled, the designated player will select all tokens on the board for which it has "owner" permission. This allows the gaming table to always show the combined vision for the player-characters. During combat, this behavior is changed to only show the vision for the player character which has the current turn. If it is the turn of a character not owned by the designated player, then the behavior goes back to showing the combined vision for all the player characters.
+
+## Hide UI Elements
+
+When this option is enabled, the designated player's view will have the FoundryVTT UI elements hidden. This can be useful if the gaming table player's view is a shared screen that nobody is directly interacting with, therefore those UI elements are not useful and only get in the way.
+
+## Do Not Pan Canvas to Ping
+
+When this option is enabled, the core FoundryVTT "Pan Canvas to Ping" functionality is disabled for the gaming table player.
 
 ## License
 
