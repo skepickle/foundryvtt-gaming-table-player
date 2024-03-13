@@ -2,6 +2,8 @@ class GamingTablePlayer {
 	static hidui = false;
 	static wrappedping = false;
 	static timestamp = 0;
+	static autoscale = 1;
+	static Layer; static Container;
 	static init() {
 		game.settings.register('gaming-table-player', 'player', {
 			name: "Gaming Table's Player Name",
@@ -42,6 +44,15 @@ class GamingTablePlayer {
 			default: 25,
 			type: Number,
 			config: true
+		});
+		game.settings.register('gaming-table-player', 'drawPlayerView', {
+			name: "Draw Gaming Table view",
+			hint: "Get a box on the GM scene representing what is being shown on the gaming table",
+			scope: "world",
+			default: false,
+			type: Boolean,
+			config: true,
+			requiresReload: true
 		});
 		game.settings.register('gaming-table-player', 'keymap', {
 			name: "Keymap",
@@ -89,8 +100,18 @@ class GamingTablePlayer {
 		}
 		if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
 			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'intervalspeed'));
+
+		}
+		if ((game.settings.get('gaming-table-player', 'drawPlayerView') && game.user.isGM) || game.user.name == game.settings.get('gaming-table-player', 'player')) {
+			GamingTablePlayer.intCanvasLayer();
 			GamingTablePlayer.listen();
 		}
+	}
+	static intCanvasLayer() {
+		GamingTablePlayer.Layer = new CanvasLayer();
+		GamingTablePlayer.Container = new PIXI.Container();
+		GamingTablePlayer.Layer.addChild(GamingTablePlayer.Container);
+		canvas.stage.addChild(GamingTablePlayer.Layer);
 	}
 	static async gamingTablePlayerLoop() {
 		let now = Date.now();
@@ -101,6 +122,7 @@ class GamingTablePlayer {
 			console.warn("Error: Gaming Table Player (set to " + game.settings.get('gaming-table-player', 'player') + ") main loop executed as user " + game.user.name);
 			return;
 		}
+
 		if (game.settings.get('gaming-table-player', 'nopan2ping')) {
 			if (!GamingTablePlayer.wrappedping) {
 				let try_again = false;
@@ -205,31 +227,50 @@ class GamingTablePlayer {
 			if (game.scenes.viewed._id != data.scene_id) {
 				return;
 			}
-			if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+			if (game.user.name == game.settings.get('gaming-table-player', 'player') && data.type == 'gmPullFocus') {
 				if (Date.now() - GamingTablePlayer.timestamp > game.settings.get('gaming-table-player', 'intervalspeed') * 3) {
 					GamingTablePlayer.gamingTablePlayerLoop();
 				}
-				canvas.animatePan(data.pan)
+				if (game.settings.get('gaming-table-player', 'autoScale')) {
+					data.pan.scale = GamingTablePlayer.getPhysicalScale();
+				}
+				canvas.animatePan(data.pan);
+			}
+			if (game.settings.get('gaming-table-player', 'drawPlayerView') && game.user.isGM && data.type == "playerWindow") {
+				GamingTablePlayer.updateDrawing(data);
 			}
 		});
 	}
+	static async updateDrawing(data) {
+		GamingTablePlayer.Container.removeChildren();
+		var drawing = new PIXI.Graphics();
+		let scale = data.scale;
+		let width = data.width / scale;
+		let height = data.height / scale;
+		drawing.lineStyle(2, 0xFFFFFF, 1);
+		drawing.drawRect(data.x - width / 2, data.y - height / 2, width, height);
+		GamingTablePlayer.Container.addChild(drawing);
+	}
 	static async pullFocus(mouse) {
 		let scale = game.settings.get('gaming-table-player', 'scale');
-		if (game.settings.get('gaming-table-player', 'autoScale')) {
-			let monitorWidth = game.settings.get('gaming-table-player', 'autoScaleWidth');
-			let gridWidth = game.settings.get('gaming-table-player', 'autoScaleGrid');
-			let screenResolution = screen.width; // this will be 1920px for full hd, 2560px for 2k and so on...
-			let squares = monitorWidth / gridWidth; // how many grid quares should be on the screen
-			let pixelsPerGrid = screenResolution / squares; // how many pixels should a square contain
-			scale = pixelsPerGrid / canvas.scene.grid.size; // we finally get the scale
-		}
 		// Called from GM session
 		var focusdata = new Object();
+		focusdata.type = "gmPullFocus";
 		focusdata.pan = mouse;
 		focusdata.pan.scale = game.settings.get('gaming-table-player', 'scale');
 		focusdata.pan.scale = scale;
 		focusdata.scene_id = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player', focusdata)
+	}
+
+	// need to be executed on the vtt player screen
+	static getPhysicalScale() {
+		let monitorWidth = game.settings.get('gaming-table-player', 'autoScaleWidth');
+		let gridWidth = game.settings.get('gaming-table-player', 'autoScaleGrid');
+		let screenResolutionX = screen.width; // this will be 1920px for full hd, 2560px for 2k and so on...
+		let squares = monitorWidth / gridWidth; // how many grid quares should be on the screen
+		let pixelsPerGrid = screenResolutionX / squares; // how many pixels should a square contain
+		return pixelsPerGrid / canvas.scene.grid.size; // we finally get the scale
 	}
 }
 
@@ -237,7 +278,6 @@ var overCanvas = true;
 
 var keyDown = (e) => {
 	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
-	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap'));
 	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap')));
 	if (bind && game.user.isGM && overCanvas) {
 		//TODO Maybe allow centering on a token location instead of mouse position.
@@ -248,19 +288,34 @@ var keyDown = (e) => {
 
 window.addEventListener('keydown', keyDown);
 
-//Hooks.on('init',()=>{
-//
-//})
 Hooks.on('ready', () => {
 	GamingTablePlayer.init();
+	if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+		Hooks.on('canvasPan', (canvas, coords) => {
+			let playerData = {
+				'scene_id': game.scenes.viewed._id,
+				'type': 'playerWindow',
+				'width': window.innerWidth,
+				'height': window.innerHeight,
+				'x': coords.x,
+				'y': coords.y,
+				'scale': canvas.scene._viewPosition.scale
+			}
+			game.socket.emit('module.gaming-table-player', playerData);
+		})
+	}
 })
-if (game.user.isGM) {
-	Hooks.on('canvasReady', () => {
+
+
+
+Hooks.on('canvasReady', () => {
+	if (game.user.isGM) {
 		canvas.stage.on('mouseover', (e) => {
 			overCanvas = true;
 		})
 		canvas.stage.on('mouseout', (e) => {
 			overCanvas = false;
 		})
-	})
-}
+	}
+})
+
