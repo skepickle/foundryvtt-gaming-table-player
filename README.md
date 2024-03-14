@@ -6,13 +6,13 @@
 
 <br />
 <p align="center">
-  <h3 align="center">Gaming Table Player - Gaming Table module for FoundryVTT</h3>
-  <p align="center">
-    A module for FoundryVTT to allow for remote control of a gaming table.
-    <br />
-    <br />
-    <a href="https://github.com/skepickle/foundryvtt-gaming-table-player/issues">Report Bug / Request Feature</a>
-  </p>
+	<h3 align="center">Gaming Table Player - Gaming Table module for FoundryVTT</h3>
+	<p align="center">
+		A module for FoundryVTT to allow for remote control of a gaming table.
+		<br />
+		<br />
+		<a href="https://github.com/skepickle/foundryvtt-gaming-table-player/issues">Report Bug / Request Feature</a>
+	</p>
 </p>
 
 # Gaming Table Player
