@@ -12,14 +12,6 @@ class GamingTablePlayer {
 			type: String,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'scale', {
-			name: 'Scale',
-			hint: 'The scale at which the map should be locked',
-			scope: 'world',
-			default: 1.0,
-			type: Number,
-			config: true
-		});
 		game.settings.register('gaming-table-player', 'keymap', {
 			name: 'Keymap',
 			hint: 'Enter the keymap used to pull focus on the gaming table',
@@ -28,20 +20,36 @@ class GamingTablePlayer {
 			type: window.Azzu.SettingsTypes.KeyBinding,
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'phyScreenWidth', {
+			name: 'Gaming Table Width',
+			hint: 'Enter the Gaming Table screen width using the same units as \'Grid Width\' below',
+			scope: 'world',
+			default: 42.0,
+			type: Number,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'phyGridWidth', {
+			name: 'Grid Width',
+			hint: 'Enter the desired grid width, use the same unit as \'Gaming Table Width\' above',
+			scope: 'world',
+			default: 1,
+			type: Number,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'refreshperiod', {
+			name: 'Refresh Period (in milliseconds)',
+			hint: 'How often to refresh Gaming Table Player\'s view. (1000 ms = 1 second)',
+			scope: 'world',
+			default: 5000,
+			type: Number,
+			config: true
+		});
 		game.settings.register('gaming-table-player', 'selecttokens', {
 			name: 'Select Tokens',
 			hint: 'Select all tokens that the gaming table player owns',
 			scope: 'world',
 			default: false,
 			type: Boolean,
-			config: true
-		});
-		game.settings.register('gaming-table-player', 'intervalspeed', {
-			name: 'Refresh Duration (in milliseconds)',
-			hint: 'How fast to refresh gaming table view. (1000 ms = 1 second)',
-			scope: 'world',
-			default: 5000,
-			type: Number,
 			config: true
 		});
 		game.settings.register('gaming-table-player', 'hideui', {
@@ -54,7 +62,15 @@ class GamingTablePlayer {
 		});
 		game.settings.register('gaming-table-player', 'nopan2ping', {
 			name: 'Do Not Pan Canvas to Ping',
-			hint: 'Enable this option in order to prevent GM from panning the Gaming Table Player\'s canvas to a ping',
+			hint: 'Enable this option in order to prevent GM from panning the Gaming Table Player\'s view to a ping',
+			scope: 'world',
+			default: false,
+			type: Boolean,
+			config: true
+		});
+		game.settings.register('gaming-table-player', 'nopan2token', {
+			name: 'Do Not Pan Canvas to Tokens',
+			hint: 'Enable this option in order to prevent owned tokens being moved off-screen from panning the Gaming Table Player\'s view',
 			scope: 'world',
 			default: false,
 			type: Boolean,
@@ -64,7 +80,7 @@ class GamingTablePlayer {
 			ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
 		}
 		if (game.user.name == game.settings.get('gaming-table-player','player')) {
-			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'intervalspeed'));
+			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'refreshperiod'));
 			GamingTablePlayer.listen();
 		}
 	}
@@ -77,7 +93,7 @@ class GamingTablePlayer {
 			console.warn('Error: Gaming Table Player (set to ' + game.settings.get('gaming-table-player', 'player') + ') main loop executed as user ' + game.user.name);
 			return;
 		}
-		if (GamingTablePlayer.scene_foci[game.scenes.viewed._id] !== undefined) {
+		if (game.settings.get('gaming-table-player', 'nopan2token') && (GamingTablePlayer.scene_foci[game.scenes.viewed._id] !== undefined)) {
 			canvas.pan(GamingTablePlayer.scene_foci[game.scenes.viewed._id]);
 		}
 		if (game.settings.get('gaming-table-player', 'nopan2ping')) {
@@ -91,7 +107,7 @@ class GamingTablePlayer {
 								}
 								let result = wrapped(...args);
 								return result;
-						}, 'WRAPPER' );
+						}, 'WRAPPER');
 						GamingTablePlayer.wrappedping = true;
 					} catch (error) {
 						try_again = true;
@@ -110,7 +126,7 @@ class GamingTablePlayer {
 								}
 								let result = wrapped(...args);
 								return result;
-						}, 'WRAPPER' );
+						}, 'WRAPPER');
 						GamingTablePlayer.wrappedping = true;
 					} catch (error) {
 						console.warn('libWrapper.register() threw an exception');
@@ -170,16 +186,23 @@ class GamingTablePlayer {
 					}
 				}
 			}
-			canvas.activeLayer.selectObjects({}, {releaseOthers: true});
+			canvas.activeLayer.selectObjects({}, { releaseOthers: true });
 			for (let t = 0; t < ownedTokens.length; t++) {
 				if ((turnTokenIds.length == 0) || turnTokenIds.includes(ownedTokens[t].id)) {
-					ownedTokens[t].control({releaseOthers: false});
+					ownedTokens[t].control({ releaseOthers: false });
 				}
 			}
 		}
 		setTimeout(function() {
 			GamingTablePlayer.gamingTablePlayerLoop();
-		}, game.settings.get('gaming-table-player', 'intervalspeed'));
+		}, game.settings.get('gaming-table-player', 'refreshperiod'));
+	}
+	static getPhysicalScale() {
+		let phyScreenWidth = game.settings.get('gaming-table-player', 'phyScreenWidth');
+		let phyGridWidth = game.settings.get('gaming-table-player', 'phyGridWidth');
+		let squares = phyScreenWidth / phyGridWidth; // how many grid quares should be on the screen
+		let pixelsPerGrid = screen.width / squares; // how many pixels should a square contain
+		return pixelsPerGrid / canvas.scene.grid.size; // we finally get the scale
 	}
 	static async listen() {
 		game.socket.on('module.gaming-table-player', async data => {
@@ -187,9 +210,10 @@ class GamingTablePlayer {
 				return;
 			}
 			if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+				data.pan.scale = GamingTablePlayer.getPhysicalScale();
 				canvas.pan(data.pan);
 				GamingTablePlayer.scene_foci[data.scene_id] = data.pan;
-				if ((Date.now() - GamingTablePlayer.timestamp) > (game.settings.get('gaming-table-player', 'intervalspeed') * 3)) {
+				if ((Date.now() - GamingTablePlayer.timestamp) > (game.settings.get('gaming-table-player', 'refreshperiod') * 3)) {
 					GamingTablePlayer.gamingTablePlayerLoop();
 				}
 			}
@@ -198,9 +222,9 @@ class GamingTablePlayer {
 	static async pullFocus(mouse) {
 		// Called from GM session
 		var focusdata = new Object();
+		focusdata.type = 'gmPullFocus';
 		focusdata.pan = mouse;
-		focusdata.pan.scale = game.settings.get('gaming-table-player', 'scale');
-		focusdata.scene_id  = game.scenes.viewed._id;
+		focusdata.scene_id = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player', focusdata);
 	}
 }
