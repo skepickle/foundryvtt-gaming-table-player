@@ -2,6 +2,7 @@ class GamingTablePlayer {
 	static hidui = false;
 	static wrappedping = false;
 	static timestamp = 0;
+	static scene_foci = {};
 	static init() {
 		game.settings.register('gaming-table-player', 'player', {
 			name: "Gaming Table's Player Name",
@@ -76,6 +77,9 @@ class GamingTablePlayer {
 			//This should never be reached but try to catch it anyways.
 			console.warn("Error: Gaming Table Player (set to "+game.settings.get('gaming-table-player','player')+") main loop executed as user "+game.user.name);
 			return;
+		}
+		if (GamingTablePlayer.scene_foci[game.scenes.viewed._id] !== undefined) {
+			canvas.pan(GamingTablePlayer.scene_foci[game.scenes.viewed._id]);
 		}
 		if (game.settings.get('gaming-table-player','nopan2ping')) {
 			if (!GamingTablePlayer.wrappedping) {
@@ -182,10 +186,11 @@ class GamingTablePlayer {
 				return;
 			}
 			if (game.user.name == game.settings.get('gaming-table-player','player')) {
+				canvas.pan(data.pan);
+				GamingTablePlayer.scene_foci[data.scene_id] = data.pan;
 				if (Date.now() - GamingTablePlayer.timestamp > game.settings.get('gaming-table-player','intervalspeed') * 3) {
 					GamingTablePlayer.gamingTablePlayerLoop();
 				}
-				canvas.animatePan(data.pan)
 			}
 		});
 	}
@@ -195,7 +200,7 @@ class GamingTablePlayer {
 		focusdata.pan = mouse;
 		focusdata.pan.scale    = game.settings.get('gaming-table-player','scale');
 		focusdata.scene_id     = game.scenes.viewed._id;
-		game.socket.emit('module.gaming-table-player',focusdata)
+		game.socket.emit('module.gaming-table-player',focusdata);
 	}
 }
 
