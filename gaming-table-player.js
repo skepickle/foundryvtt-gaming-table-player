@@ -3,6 +3,7 @@ class GamingTablePlayer {
 	static wrappedping = false;
 	static timestamp = 0;
 	static scene_foci = {};
+	static mouseIsOverCanvas = true;
 	static init() {
 		game.settings.register('gaming-table-player', 'player', {
 			name: 'Gaming Table\'s Player Name',
@@ -76,10 +77,20 @@ class GamingTablePlayer {
 			type: Boolean,
 			config: true
 		});
-		if (!game.modules.get('lib-wrapper')?.active && game.user.isGM) {
-			ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
-		}
-		if (game.user.name == game.settings.get('gaming-table-player','player')) {
+		if (game.user.isGM) {
+			window.addEventListener('keydown', GamingTablePlayer.keyDown);
+			Hooks.on('canvasReady', ()=> {
+				canvas.stage.on('mouseover', (e)=> {
+					GamingTablePlayer.mouseIsOverCanvas = true;
+				});
+				canvas.stage.on('mouseout', (e) => {
+					GamingTablePlayer.mouseIsOverCanvas = false;
+				});
+			});
+			if (!game.modules.get('lib-wrapper')?.active) {
+				ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
+			}
+		} else if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
 			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'refreshperiod'));
 			GamingTablePlayer.listen();
 		}
@@ -227,22 +238,14 @@ class GamingTablePlayer {
 		focusdata.scene_id = game.scenes.viewed._id;
 		game.socket.emit('module.gaming-table-player', focusdata);
 	}
-}
-
-var overCanvas = true;
-
-var keyDown = (e) => {
-	const KeyBinding = window.Azzu.SettingsTypes.KeyBinding;
-	const parsedValue = KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap'));
-	const bind = KeyBinding.eventIsForBinding(e, KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap')));
-	if (bind && game.user.isGM && overCanvas) {
-		//TODO Maybe allow centering on a token location instead of mouse position.
-		var mouse = canvas.mousePosition;
-		GamingTablePlayer.pullFocus(mouse);
+	static async keyDown(e) {
+		if (game.user.isGM && GamingTablePlayer.mouseIsOverCanvas && window.Azzu.SettingsTypes.KeyBinding.eventIsForBinding(e, window.Azzu.SettingsTypes.KeyBinding.parse(game.settings.get('gaming-table-player', 'keymap')))) {
+			//TODO Maybe allow centering on a token location instead of mouse position.
+			var mouse = canvas.mousePosition;
+			GamingTablePlayer.pullFocus(mouse);
+		}
 	}
 }
-
-window.addEventListener('keydown', keyDown);
 
 //Hooks.on('init', () => {
 //
@@ -250,13 +253,3 @@ window.addEventListener('keydown', keyDown);
 Hooks.on('ready', () => {
 	GamingTablePlayer.init();
 })
-if (game.user.isGM) {
-	Hooks.on('canvasReady', ()=> {
-		canvas.stage.on('mouseover', (e)=> {
-			overCanvas = true;
-		});
-		canvas.stage.on('mouseout', (e) => {
-			overCanvas = false;
-		});
-	})
-}
