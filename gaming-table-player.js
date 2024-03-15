@@ -1,8 +1,8 @@
 class GamingTablePlayer {
-	static hidui = false;
-	static wrappedping = false;
-	static timestamp = 0;
-	static scene_foci = {};
+	static hidUI = false;
+	static handlePingIsWrapped = false;
+	static refreshTimestamp = 0;
+	static sceneFoci = {};
 	static mouseIsOverCanvas = true;
 	static init() {
 		game.settings.register('gaming-table-player', 'player', {
@@ -17,7 +17,7 @@ class GamingTablePlayer {
 			name: 'Keymap',
 			hint: 'Enter the keymap used to pull focus on the gaming table',
 			scope: 'world',
-			default: 't',
+			default: 'Ctrl + Shift + Alt + T',
 			type: window.Azzu.SettingsTypes.KeyBinding,
 			config: true
 		});
@@ -37,7 +37,7 @@ class GamingTablePlayer {
 			type: Number,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'refreshperiod', {
+		game.settings.register('gaming-table-player', 'refreshPeriod', {
 			name: 'Refresh Period (in milliseconds)',
 			hint: 'How often to refresh Gaming Table Player\'s view. (1000 ms = 1 second)',
 			scope: 'world',
@@ -45,7 +45,7 @@ class GamingTablePlayer {
 			type: Number,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'selecttokens', {
+		game.settings.register('gaming-table-player', 'selectTokens', {
 			name: 'Select Tokens',
 			hint: 'Select all tokens that the gaming table player owns',
 			scope: 'world',
@@ -53,7 +53,7 @@ class GamingTablePlayer {
 			type: Boolean,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'hideui', {
+		game.settings.register('gaming-table-player', 'hideUI', {
 			name: 'Hide UI Elements',
 			hint: 'Enable this option in order to have the Gaming Table Player hide all FoundryVTT UI elements',
 			scope: 'world',
@@ -61,17 +61,17 @@ class GamingTablePlayer {
 			type: Boolean,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'nopan2ping', {
-			name: 'Do Not Pan Canvas to Ping',
-			hint: 'Enable this option in order to prevent GM from panning the Gaming Table Player\'s view to a ping',
+		game.settings.register('gaming-table-player', 'noPanToTokens', {
+			name: 'Do Not Pan Canvas to Tokens',
+			hint: 'Enable this option in order to prevent owned tokens being moved off-screen from panning the Gaming Table Player\'s view',
 			scope: 'world',
 			default: false,
 			type: Boolean,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'nopan2token', {
-			name: 'Do Not Pan Canvas to Tokens',
-			hint: 'Enable this option in order to prevent owned tokens being moved off-screen from panning the Gaming Table Player\'s view',
+		game.settings.register('gaming-table-player', 'noPanToPing', {
+			name: 'Do Not Pan Canvas to Ping',
+			hint: 'Enable this option in order to prevent GM from panning the Gaming Table Player\'s view to a ping',
 			scope: 'world',
 			default: false,
 			type: Boolean,
@@ -91,24 +91,22 @@ class GamingTablePlayer {
 				ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
 			}
 		} else if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
-			setTimeout(GamingTablePlayer.gamingTablePlayerLoop, game.settings.get('gaming-table-player', 'refreshperiod'));
+			setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
 			GamingTablePlayer.listen();
 		}
 	}
-	static async gamingTablePlayerLoop() {
-		let now = Date.now();
-		//console.log('gamingTablePlayerLoop() @ ' + now);
-		GamingTablePlayer.timestamp = now;
+	static async refreshLoop() {
+		GamingTablePlayer.refreshTimestamp = Date.now();
 		if (game.user.name != game.settings.get('gaming-table-player', 'player')) {
 			//This should never be reached but try to catch it anyways.
 			console.warn('Error: Gaming Table Player (set to ' + game.settings.get('gaming-table-player', 'player') + ') main loop executed as user ' + game.user.name);
 			return;
 		}
-		if (game.settings.get('gaming-table-player', 'nopan2token') && (GamingTablePlayer.scene_foci[game.scenes.viewed._id] !== undefined)) {
-			canvas.pan(GamingTablePlayer.scene_foci[game.scenes.viewed._id]);
+		if (game.settings.get('gaming-table-player', 'noPanToTokens') && (GamingTablePlayer.sceneFoci[game.scenes.viewed._id] !== undefined)) {
+			canvas.pan(GamingTablePlayer.sceneFoci[game.scenes.viewed._id]);
 		}
-		if (game.settings.get('gaming-table-player', 'nopan2ping')) {
-			if (!GamingTablePlayer.wrappedping) {
+		if (game.settings.get('gaming-table-player', 'noPanToPing')) {
+			if (!GamingTablePlayer.handlePingIsWrapped) {
 				let try_again = false;
 				{
 					try {
@@ -119,7 +117,7 @@ class GamingTablePlayer {
 								let result = wrapped(...args);
 								return result;
 						}, 'WRAPPER');
-						GamingTablePlayer.wrappedping = true;
+						GamingTablePlayer.handlePingIsWrapped = true;
 					} catch (error) {
 						try_again = true;
 					}
@@ -138,44 +136,44 @@ class GamingTablePlayer {
 								let result = wrapped(...args);
 								return result;
 						}, 'WRAPPER');
-						GamingTablePlayer.wrappedping = true;
+						GamingTablePlayer.handlePingIsWrapped = true;
 					} catch (error) {
 						console.warn('libWrapper.register() threw an exception');
 					}
 				}
 			}
 		} else {
-			if (GamingTablePlayer.wrappedping) {
+			if (GamingTablePlayer.handlePingIsWrapped) {
 				try {
 					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
 				} catch (error) {
 					console.warn('libWrapper.unregister() threw an exception');
 				}
-				GamingTablePlayer.wrappedping = false;
+				GamingTablePlayer.handlePingIsWrapped = false;
 			}
 		}
-		if (game.settings.get('gaming-table-player', 'hideui')) {
-			if (!GamingTablePlayer.hidui) {
+		if (game.settings.get('gaming-table-player', 'hideUI')) {
+			if (!GamingTablePlayer.hidUI) {
 				$('#players').hide();
 				$('#logo').hide();
 				$('#hotbar').hide();
 				$('#navigation').hide();
 				$('#controls').hide();
 				$('#sidebar').hide();
-				GamingTablePlayer.hidui = true;
+				GamingTablePlayer.hidUI = true;
 			}
 		} else {
-			if (GamingTablePlayer.hidui) {
+			if (GamingTablePlayer.hidUI) {
 				$('#players').show();
 				$('#logo').show();
 				$('#hotbar').show();
 				$('#navigation').show();
 				$('#controls').show();
 				$('#sidebar').show();
-				GamingTablePlayer.hidui = false;
+				GamingTablePlayer.hidUI = false;
 			}
 		}
-		if (game.settings.get('gaming-table-player', 'selecttokens')) {
+		if (game.settings.get('gaming-table-player', 'selectTokens')) {
 			let in_combat = false;
 			let turnTokenIds = [];
 
@@ -205,8 +203,8 @@ class GamingTablePlayer {
 			}
 		}
 		setTimeout(function() {
-			GamingTablePlayer.gamingTablePlayerLoop();
-		}, game.settings.get('gaming-table-player', 'refreshperiod'));
+			GamingTablePlayer.refreshLoop();
+		}, game.settings.get('gaming-table-player', 'refreshPeriod'));
 	}
 	static getPhysicalScale() {
 		let phyScreenWidth = game.settings.get('gaming-table-player', 'phyScreenWidth');
@@ -223,9 +221,9 @@ class GamingTablePlayer {
 			if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
 				data.pan.scale = GamingTablePlayer.getPhysicalScale();
 				canvas.pan(data.pan);
-				GamingTablePlayer.scene_foci[data.scene_id] = data.pan;
-				if ((Date.now() - GamingTablePlayer.timestamp) > (game.settings.get('gaming-table-player', 'refreshperiod') * 3)) {
-					GamingTablePlayer.gamingTablePlayerLoop();
+				GamingTablePlayer.sceneFoci[data.scene_id] = data.pan;
+				if ((Date.now() - GamingTablePlayer.refreshTimestamp) > (game.settings.get('gaming-table-player', 'refreshPeriod') * 3)) {
+					GamingTablePlayer.refreshLoop();
 				}
 			}
 		});
