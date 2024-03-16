@@ -1,8 +1,12 @@
-[![foundry-shield]][foundry-url]
+[![Latest Version](https://img.shields.io/github/v/release/skepickle/foundryvtt-gaming-table-player?display_name=release&sort=semver&label=Latest%20Version)](https://github.com/skepickle/foundryvtt-gaming-table-player/releases/latest)
+![Foundry Version](https://img.shields.io/endpoint?url=https://foundryshields.com/version?url=https%3A%2F%2Fraw.githubusercontent.com%2Fskepickle%2Ffoundryvtt-gaming-table-player%2Fmain%2Fmodule.json)
+[![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fgaming-table-player&colorB=blueviolet)](https://forge-vtt.com/bazaar#package=gaming-table-player)
+[![License](https://img.shields.io/github/license/skepickle/foundryvtt-gaming-table-player?label=License)](LICENSE)
+
+
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![All Release Downloads](https://img.shields.io/github/downloads/skepickle/foundryvtt-gaming-table-player/total.svg)]()
 
 <br />
 <p align="center">
@@ -20,6 +24,8 @@ Forces a designated player's view to focus on a specific point in a scene, with 
 
 The GM can press the hotkey while their mouse pointer is over a spot in the scene that is active for the designated player. When this is done, the designated player's view will be panned and zoomed to where the GM's mouse is located.
 
+The scale is set by setting two values: Table Width and Table Grid Width. Table Width is the physical width of the gaming table display screen. The Table Grid Width is the physical size desired for the on-screen grids. These two values are used to calculate the scale needed to achieve the desired grid dimensions.
+
 The refresh duration that the designated player's view is updated when not triggered by the GM using the hotkey is configurable in the module settings. The default is 5 seconds (5000ms)
 
 In addition to this behavior, there are also some optional behaviors that can be enabled via checkboxes in the Gaming Table Player settings configurations:
@@ -32,7 +38,10 @@ When this option is enabled, the designated player will select all tokens on the
 
 When this option is enabled, the designated player's view will have the FoundryVTT UI elements hidden. This can be useful if the gaming table player's view is a shared screen that nobody is directly interacting with, therefore those UI elements are not useful and only get in the way.
 
-## Do Not Pan Canvas to Ping
+## Do Not Pan to Tokens
+When this option is enabled, the core FoundryVTT functionality that pans the canvas when a new owned token is added, or when an owned token is moved off-screen, is disabled for the gaming table player.
+
+## Do Not Pan to Ping
 
 When this option is enabled, the core FoundryVTT "Pan Canvas to Ping" functionality is disabled for the gaming table player.
 
