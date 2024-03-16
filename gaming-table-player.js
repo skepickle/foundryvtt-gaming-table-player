@@ -161,25 +161,21 @@ class GamingTablePlayer {
 			}
 		}
 		if (game.settings.get('gaming-table-player', 'hideUI')) {
-			if (!GamingTablePlayer.hidUI) {
-				$('#players').hide();
-				$('#logo').hide();
-				$('#hotbar').hide();
-				$('#navigation').hide();
-				$('#controls').hide();
-				$('#sidebar').hide();
-				GamingTablePlayer.hidUI = true;
-			}
-		} else {
-			if (GamingTablePlayer.hidUI) {
-				$('#players').show();
-				$('#logo').show();
-				$('#hotbar').show();
-				$('#navigation').show();
-				$('#controls').show();
-				$('#sidebar').show();
-				GamingTablePlayer.hidUI = false;
-			}
+			$('#players').hide();
+			$('#logo').hide();
+			$('#hotbar').hide();
+			$('#navigation').hide();
+			$('#controls').hide();
+			$('#sidebar').hide();
+			GamingTablePlayer.hidUI = true;
+		} else if (GamingTablePlayer.hidUI) {
+			$('#players').show();
+			$('#logo').show();
+			$('#hotbar').show();
+			$('#navigation').show();
+			$('#controls').show();
+			$('#sidebar').show();
+			GamingTablePlayer.hidUI = false;
 		}
 		if (game.settings.get('gaming-table-player', 'selectTokens')) {
 			let in_combat = false;
