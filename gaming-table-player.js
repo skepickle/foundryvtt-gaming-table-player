@@ -224,12 +224,11 @@ class GamingTablePlayer {
 			switch (data.type) {
 				case 'gmPullFocus':
 					if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
-						if (game.scenes.viewed._id != data.scene_id) {
-							return;
-						}
 						data.pan.scale = GamingTablePlayer.getPhysicalScale();
-						canvas.pan(data.pan);
 						GamingTablePlayer.sceneFoci[data.scene_id] = data.pan;
+						if (game.scenes.viewed._id == data.scene_id) {
+							canvas.pan(data.pan);
+						}
 						if ((Date.now() - GamingTablePlayer.refreshTimestamp) >
 							(game.settings.get('gaming-table-player', 'refreshPeriod') * 3)) {
 							GamingTablePlayer.refreshLoop();
