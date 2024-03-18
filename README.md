@@ -45,6 +45,10 @@ When this option is enabled, the core FoundryVTT functionality that pans the can
 
 When this option is enabled, the core FoundryVTT "Pan Canvas to Ping" functionality is disabled for the gaming table player.
 
+## Draw Table View
+
+When this option is enabled, the gaming table's current view is shown as a rectangle on the GM's viw.
+
 ## License
 
 Gaming Table Player is a module for Foundry VTT by Skepickle and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
