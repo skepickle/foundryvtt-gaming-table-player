@@ -92,6 +92,14 @@ class GamingTablePlayer {
 			type: Boolean,
 			config: true
 		});
+		game.settings.register('gaming-table-player', 'focusOnToken', {
+			name: 'Focus on Select Token',
+			hint: 'If token is selected when hotkey is pressed, use it for center of focus',
+			scope: 'world',
+			default: false,
+			type: Boolean,
+			config: true
+		});
 		if (game.user.isGM) {
 			window.addEventListener('keydown', GamingTablePlayer.keyDown);
 			Hooks.on('canvasReady', ()=> {
@@ -350,8 +358,13 @@ class GamingTablePlayer {
 				const kb = window.Azzu.SettingsTypes.KeyBinding;
 				const key = kb.parse(game.settings.get('gaming-table-player', 'keymap'));
 				if (kb.eventIsForBinding(e, key)) {
-					//TODO Maybe allow centering on a token location instead of mouse position.
 					var mouse = canvas.mousePosition;
+					if (game.settings.get('gaming-table-player', 'focusOnToken')) {
+						if (canvas.tokens.controlled.length == 1) {
+							mouse.x = canvas.tokens.controlled[0].center.x;
+							mouse.y = canvas.tokens.controlled[0].center.y;
+						}
+					}
 					GamingTablePlayer.pullFocus(mouse);
 				}
 			}

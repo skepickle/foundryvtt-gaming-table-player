@@ -49,6 +49,10 @@ When this option is enabled, the core FoundryVTT "Pan Canvas to Ping" functional
 
 When this option is enabled, the gaming table's current view is shown as a blue rectangle on the GM's view. Any other scenes that have been focused will be shown as a red rectangle on the GM's view.
 
+## Focus on Select Token
+
+When this option is enabled, if the GM has a token selected when they press the hotkey, then the gaming table player will focus on where that token was at that moment on the GM's view. This allows the GM to even use invisible tokens as a center for focus. The gaming table player's view does not shift automatically if the respective token is moved after the hotkey was pressed.
+
 ## License
 
 Gaming Table Player is a module for Foundry VTT by Skepickle and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
