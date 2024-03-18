@@ -13,6 +13,7 @@ class GamingTablePlayer {
 			name: 'Table Player',
 			hint: 'The name of the player who\'s session is being displayed on the gaming table',
 			scope: 'world',
+			requiresReload: true,
 			default: 'VTT',
 			type: String,
 			config: true
@@ -21,6 +22,7 @@ class GamingTablePlayer {
 			name: 'Keymap',
 			hint: 'The hotkey used by the GM to pull focus on the gaming table',
 			scope: 'world',
+			requiresReload: true,
 			default: 'Ctrl + Shift + Alt + T',
 			type: window.Azzu.SettingsTypes.KeyBinding,
 			config: true
@@ -102,13 +104,13 @@ class GamingTablePlayer {
 			});
 			if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
 				Hooks.on('preUpdateScene', (s) => {
-					GamingTablePlayer.updateBoundingBox(s._id);
+					setTimeout(GamingTablePlayer.updateBoundingBox, 500, s._id);
 				});
 				Hooks.on('updateScene', (s) => {
-					GamingTablePlayer.updateBoundingBox(s._id);
+					setTimeout(GamingTablePlayer.updateBoundingBox, 500, s._id);
 				});
 				Hooks.on('canvasPan', (e) => {
-					GamingTablePlayer.updateBoundingBox();
+					setTimeout(GamingTablePlayer.updateBoundingBox, 500);
 				});
 				GamingTablePlayer.initCanvasLayer();
 			}
@@ -126,9 +128,11 @@ class GamingTablePlayer {
 						data.height = window.innerHeight;
 						game.socket.emit('module.gaming-table-player', data);
 					}
-					setTimeout(function() {
-						canvas.pan(data.pan);
-					}, 250);
+					setTimeout(function(sid) {
+						if (canvas.scene._id == s._id) {
+							canvas.pan(data.pan);
+						}
+					}, 250, s._id);
 				}
 			});
 			setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
@@ -247,12 +251,12 @@ class GamingTablePlayer {
 		setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
 	}
 
-	static getPhysicalScale() {
+	static getPhysicalScale(scene_grid_size) {
 		const phyScreenWidth = game.settings.get('gaming-table-player', 'phyScreenWidth');
 		const phyGridWidth = game.settings.get('gaming-table-player', 'phyGridWidth');
 		const squares = phyScreenWidth / phyGridWidth; // # of grid squares on screen
 		const pixelsPerGrid = screen.width / squares;  // # of pixels per grid square
-		return pixelsPerGrid / canvas.scene.grid.size;
+		return pixelsPerGrid / scene_grid_size;
 	}
 
 	static async listen() {
@@ -260,15 +264,15 @@ class GamingTablePlayer {
 			switch (data.type) {
 				case 'gmPullFocus':
 					if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
-						data.pan.scale = GamingTablePlayer.getPhysicalScale();
+						data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
 						GamingTablePlayer.sceneFoci[data.scene_id] = data;
 						if (game.scenes.viewed._id == data.scene_id) {
 							canvas.pan(data.pan);
-							data.type = 'tableBounds';
-							data.width = window.innerWidth;
-							data.height = window.innerHeight;
-							game.socket.emit('module.gaming-table-player', data);
 						}
+						data.type = 'tableBounds';
+						data.width = window.innerWidth;
+						data.height = window.innerHeight;
+						game.socket.emit('module.gaming-table-player', data);
 						if ((Date.now() - GamingTablePlayer.refreshTimestamp) >
 							(game.settings.get('gaming-table-player', 'refreshPeriod') * 3)) {
 							GamingTablePlayer.refreshLoop();
@@ -279,7 +283,7 @@ class GamingTablePlayer {
 					if (game.user.isGM && game.settings.get('gaming-table-player', 'drawTableBounds')) {
 						if (data.scene_id == game.scenes.viewed._id) {
 							GamingTablePlayer.sceneFoci[data.scene_id] = data;
-							setTimeout(GamingTablePlayer.updateBoundingBox, 250);
+							setTimeout(GamingTablePlayer.updateBoundingBox, 500);
 						}
 					}
 					break;
@@ -312,7 +316,7 @@ class GamingTablePlayer {
 		if (scene_id == '') {
 			scene_id = game.scenes.viewed._id;
 		}
-		if (game.users.getName(game.settings.get('gaming-table-player', 'player')).viewedScene !== scene_id) {
+		if (GamingTablePlayer.sceneFoci[scene_id] === undefined) {
 			return;
 		}
 		var data = GamingTablePlayer.sceneFoci[scene_id];
@@ -320,13 +324,21 @@ class GamingTablePlayer {
 		const width = data.width / scale;
 		const height = data.height / scale;
 		var drawing = new PIXI.Graphics();
-		drawing.lineStyle(5, 0xFFFFFF, 0.5, 1);
+		var color = 0x0000FF;
+		var view_type = 'Active';
+		if (game.users.getName(game.settings.get('gaming-table-player', 'player')).viewedScene !== scene_id) {
+			color = 0xFF0000;
+			view_type = 'Inactive';
+		}
+		drawing.lineStyle(5, color, 0.5, 1);
 		drawing.drawRect(data.pan.x - width / 2, data.pan.y - height / 2, width, height);
 		var text = new PIXI.Text(
-			game.settings.get('gaming-table-player', 'player') + '\'s view:',
-			{fontFamily: 'Arial', fontSize: 24, fill: 0xFFFFFF, align: 'left'});
-		text.x = data.pan.x - width / 2;
+			game.settings.get('gaming-table-player', 'player') + '\'s ' + view_type + ' View',
+			{fontFamily: 'Arial Black', fontSize: 24, fill: color, align: 'center'});
+		text.x = data.pan.x;
+		text.anchor.x = 0.5;
 		text.y = data.pan.y - height / 2;
+		text.anchor.y = 1.25;
 		text.alpha = 0.5;
 		GamingTablePlayer.Container.addChild(drawing);
 		GamingTablePlayer.Container.addChild(text);

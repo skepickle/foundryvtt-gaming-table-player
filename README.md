@@ -47,7 +47,7 @@ When this option is enabled, the core FoundryVTT "Pan Canvas to Ping" functional
 
 ## Draw Table View
 
-When this option is enabled, the gaming table's current view is shown as a rectangle on the GM's viw.
+When this option is enabled, the gaming table's current view is shown as a blue rectangle on the GM's view. Any other scenes that have been focused will be shown as a red rectangle on the GM's view.
 
 ## License
 
