@@ -18,15 +18,6 @@ class GamingTablePlayer {
 			type: String,
 			config: true
 		});
-		game.settings.register('gaming-table-player', 'keymap', {
-			name: 'Keymap',
-			hint: 'The hotkey used by the GM to pull focus on the gaming table',
-			scope: 'world',
-			requiresReload: true,
-			default: 'Ctrl + Shift + Alt + T',
-			type: window.Azzu.SettingsTypes.KeyBinding,
-			config: true
-		});
 		game.settings.register('gaming-table-player', 'phyScreenWidth', {
 			name: 'Table Width',
 			hint: 'The physical screen width using the same units as \'Table Grid Width\' below',
@@ -101,7 +92,6 @@ class GamingTablePlayer {
 			config: true
 		});
 		if (game.user.isGM) {
-			window.addEventListener('keydown', GamingTablePlayer.keyDown);
 			Hooks.on('canvasReady', ()=> {
 				canvas.stage.on('mouseover', (e) => {
 					GamingTablePlayer.mouseIsOverCanvas = true;
@@ -352,26 +342,33 @@ class GamingTablePlayer {
 		GamingTablePlayer.Container.addChild(text);
 	}
 
-	static async keyDown(e) {
-		if (game.user.isGM) {
-			if (GamingTablePlayer.mouseIsOverCanvas) {
-				const kb = window.Azzu.SettingsTypes.KeyBinding;
-				const key = kb.parse(game.settings.get('gaming-table-player', 'keymap'));
-				if (kb.eventIsForBinding(e, key)) {
-					var mouse = canvas.mousePosition;
-					if (game.settings.get('gaming-table-player', 'focusOnToken')) {
-						if (canvas.tokens.controlled.length == 1) {
-							mouse.x = canvas.tokens.controlled[0].center.x;
-							mouse.y = canvas.tokens.controlled[0].center.y;
-						}
-					}
-					GamingTablePlayer.pullFocus(mouse);
-				}
-			}
-		}
-	}
-
 }
+
+Hooks.on('init', () => {
+	game.keybindings.register('gaming-table-player', 'gamingTablePlayerTargettingHotkey', {
+		name: 'Keymap',
+		hint: 'The hotkey used by the GM to pull focus on the gaming table',
+		editable: [
+			{
+				key: 'KeyT',
+				modifiers: ['Control', 'Alt', 'Shift']
+			}
+		],
+		onDown: () => {
+			var mouse = canvas.mousePosition;
+				if (game.settings.get('gaming-table-player', 'focusOnToken')) {
+					if (canvas.tokens.controlled.length == 1) {
+						mouse.x = canvas.tokens.controlled[0].center.x;
+						mouse.y = canvas.tokens.controlled[0].center.y;
+					}
+				}
+				GamingTablePlayer.pullFocus(mouse);
+		},
+		onUp: () => {},
+		restricted: true,
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+	});
+});
 
 Hooks.on('ready', () => {
 	GamingTablePlayer.initialize();
