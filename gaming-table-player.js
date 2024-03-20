@@ -345,7 +345,7 @@ class GamingTablePlayer {
 }
 
 Hooks.on('init', () => {
-	game.keybindings.register('gaming-table-player', 'showGamingTableNotification', {
+	game.keybindings.register('gaming-table-player', 'gamingTablePlayerTargettingHotkey', {
 		name: 'Keymap',
 		hint: 'The hotkey used by the GM to pull focus on the gaming table',
 		editable: [
