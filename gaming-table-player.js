@@ -5,6 +5,7 @@ class GamingTablePlayer {
 	static refreshTimestamp = 0;
 	static sceneFoci = {};
 	static mouseIsOverCanvas = true;
+	static pausePanFix = false;
 	static Layer;
 	static Container;
 
@@ -103,13 +104,13 @@ class GamingTablePlayer {
 			});
 			if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
 				Hooks.on('preUpdateScene', (s) => {
-					setTimeout(GamingTablePlayer.updateBoundingBox, 500, s._id);
+					setTimeout(GamingTablePlayer.updateBoundingBox, 250, s._id);
 				});
 				Hooks.on('updateScene', (s) => {
-					setTimeout(GamingTablePlayer.updateBoundingBox, 500, s._id);
+					setTimeout(GamingTablePlayer.updateBoundingBox, 250, s._id);
 				});
-				Hooks.on('canvasPan', (e) => {
-					setTimeout(GamingTablePlayer.updateBoundingBox, 500);
+				Hooks.on('canvasPan', (c) => {
+					setTimeout(GamingTablePlayer.updateBoundingBox, 250);
 				});
 				GamingTablePlayer.initCanvasLayer();
 			}
@@ -119,35 +120,35 @@ class GamingTablePlayer {
 			GamingTablePlayer.listen();
 		} else if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
 			Hooks.on('updateScene', (s) => {
-				if (GamingTablePlayer.sceneFoci[s._id] !== undefined) {
-					var data = GamingTablePlayer.sceneFoci[s._id];
-					if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
-						data.type = 'tableBounds';
-						data.width = window.innerWidth;
-						data.height = window.innerHeight;
-						game.socket.emit('module.gaming-table-player', data);
-					}
-					setTimeout(function(sid, data) {
-						if (canvas.scene._id == sid) {
-							canvas.animatePan(data.pan);
-						}
-					}, 250, s._id, data);
+				if (GamingTablePlayer.sceneFoci[s._id] === undefined) {
+					return;
 				}
+				var data = GamingTablePlayer.sceneFoci[s._id];
+				if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
+					data.type = 'tableBounds';
+					data.width = window.innerWidth;
+					data.height = window.innerHeight;
+					game.socket.emit('module.gaming-table-player', data);
+				}
+				setTimeout(function(sid, data) {
+					if (canvas.scene._id == sid) {
+						canvas.animatePan(data.pan);
+					}
+				}, 250, s._id, data);
 			});
 			if (game.settings.get('gaming-table-player', 'noPanToTokens')) {
 				Hooks.on('canvasPan', (c) => {
-					if (GamingTablePlayer.sceneFoci[c.scene._id] !== undefined) {
+					if (GamingTablePlayer.sceneFoci[c.scene._id] === undefined) {
+						return;
+					}
+					if (!GamingTablePlayer.pausePanFix) {
+						GamingTablePlayer.pausePanFix = true;
 						var data = GamingTablePlayer.sceneFoci[c.scene._id];
-						if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
-							data.type = 'tableBounds';
-							data.width = window.innerWidth;
-							data.height = window.innerHeight;
-							game.socket.emit('module.gaming-table-player', data);
-						}
-						setTimeout(function(sid, data) {
-							if (canvas.scene._id == sid) {
-								canvas.animatePan(data.pan);
+						setTimeout(function(sid1, data1) {
+							if (canvas.scene._id == sid1) {
+								canvas.animatePan(data1.pan);
 							}
+							GamingTablePlayer.pausePanFix = false;
 						}, game.settings.get('gaming-table-player', 'refreshPeriod'), c.scene._id, data);
 					}
 				});
@@ -300,7 +301,7 @@ class GamingTablePlayer {
 					if (game.user.isGM && game.settings.get('gaming-table-player', 'drawTableBounds')) {
 						if (data.scene_id == game.scenes.viewed._id) {
 							GamingTablePlayer.sceneFoci[data.scene_id] = data;
-							setTimeout(GamingTablePlayer.updateBoundingBox, 500);
+							setTimeout(GamingTablePlayer.updateBoundingBox, 250);
 						}
 					}
 					break;
