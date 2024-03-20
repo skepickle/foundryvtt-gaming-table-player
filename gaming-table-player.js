@@ -138,7 +138,7 @@ class GamingTablePlayer {
 					}
 					setTimeout(function(sid) {
 						if (canvas.scene._id == s._id) {
-							canvas.pan(data.pan);
+							canvas.animatePan(data.pan);
 						}
 					}, 250, s._id);
 				}
@@ -159,7 +159,7 @@ class GamingTablePlayer {
 		}
 		if (game.settings.get('gaming-table-player', 'noPanToTokens') &&
 			(GamingTablePlayer.sceneFoci[game.scenes.viewed._id] !== undefined)) {
-			canvas.pan(GamingTablePlayer.sceneFoci[game.scenes.viewed._id].pan);
+			canvas.animatePan(GamingTablePlayer.sceneFoci[game.scenes.viewed._id].pan);
 		}
 		if (game.settings.get('gaming-table-player', 'noPanToPing')) {
 			if (!GamingTablePlayer.handlePingIsWrapped) {
@@ -275,7 +275,7 @@ class GamingTablePlayer {
 						data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
 						GamingTablePlayer.sceneFoci[data.scene_id] = data;
 						if (game.scenes.viewed._id == data.scene_id) {
-							canvas.pan(data.pan);
+							canvas.animatePan(data.pan);
 						}
 						data.type = 'tableBounds';
 						data.width = window.innerWidth;
