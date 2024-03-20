@@ -62,6 +62,7 @@ class GamingTablePlayer {
 			name: 'Do Not Pan to Tokens',
 			hint: 'Prevent panning Gaming Table view when owned tokens are moved off-screen',
 			scope: 'world',
+			requiresReload: true,
 			default: false,
 			type: Boolean,
 			config: true
@@ -126,13 +127,31 @@ class GamingTablePlayer {
 						data.height = window.innerHeight;
 						game.socket.emit('module.gaming-table-player', data);
 					}
-					setTimeout(function(sid) {
-						if (canvas.scene._id == s._id) {
+					setTimeout(function(sid, data) {
+						if (canvas.scene._id == sid) {
 							canvas.animatePan(data.pan);
 						}
-					}, 250, s._id);
+					}, 250, s._id, data);
 				}
 			});
+			if (game.settings.get('gaming-table-player', 'noPanToTokens')) {
+				Hooks.on('canvasPan', (c) => {
+					if (GamingTablePlayer.sceneFoci[c.scene._id] !== undefined) {
+						var data = GamingTablePlayer.sceneFoci[c.scene._id];
+						if (game.settings.get('gaming-table-player', 'drawTableBounds')) {
+							data.type = 'tableBounds';
+							data.width = window.innerWidth;
+							data.height = window.innerHeight;
+							game.socket.emit('module.gaming-table-player', data);
+						}
+						setTimeout(function(sid, data) {
+							if (canvas.scene._id == sid) {
+								canvas.animatePan(data.pan);
+							}
+						}, game.settings.get('gaming-table-player', 'refreshPeriod'), c.scene._id, data);
+					}
+				});
+			}
 			setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
 			GamingTablePlayer.listen();
 		}
@@ -147,10 +166,10 @@ class GamingTablePlayer {
 				') main loop executed as user ' + game.user.name);
 			return;
 		}
-		if (game.settings.get('gaming-table-player', 'noPanToTokens') &&
-			(GamingTablePlayer.sceneFoci[game.scenes.viewed._id] !== undefined)) {
-			canvas.animatePan(GamingTablePlayer.sceneFoci[game.scenes.viewed._id].pan);
-		}
+		//if (game.settings.get('gaming-table-player', 'noPanToTokens') &&
+		//	(GamingTablePlayer.sceneFoci[game.scenes.viewed._id] !== undefined)) {
+		//	canvas.animatePan(GamingTablePlayer.sceneFoci[game.scenes.viewed._id].pan);
+		//}
 		if (game.settings.get('gaming-table-player', 'noPanToPing')) {
 			if (!GamingTablePlayer.handlePingIsWrapped) {
 				let try_again = false;
