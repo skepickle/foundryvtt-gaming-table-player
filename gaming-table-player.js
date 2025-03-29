@@ -262,7 +262,9 @@ class GamingTablePlayer {
 			switch (data.type) {
 				case 'gmPullFocus':
 					if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
-						data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
+						if (!data.pan.hasOwnProperty('scale')) {
+							data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
+						}
 						GamingTablePlayer.sceneFoci[data.scene_id] = data;
 						if (game.scenes.viewed._id == data.scene_id) {
 							canvas.animatePan(data.pan);
@@ -356,13 +358,29 @@ Hooks.on('init', () => {
 		],
 		onDown: () => {
 			var mouse = canvas.mousePosition;
-				if (game.settings.get('gaming-table-player', 'focusOnToken')) {
-					if (canvas.tokens.controlled.length == 1) {
-						mouse.x = canvas.tokens.controlled[0].center.x;
-						mouse.y = canvas.tokens.controlled[0].center.y;
-					}
+			if (game.settings.get('gaming-table-player', 'focusOnToken')) {
+				if (canvas.tokens.controlled.length == 1) {
+					mouse.x = canvas.tokens.controlled[0].center.x;
+					mouse.y = canvas.tokens.controlled[0].center.y;
 				}
-				GamingTablePlayer.pullFocus(mouse);
+			}
+			GamingTablePlayer.pullFocus(mouse);
+		},
+		onUp: () => {},
+		restricted: true,
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+	});
+	game.keybindings.register('gaming-table-player', 'gamingTablePlayerInitialViewHotkey', {
+		name: 'Initial View Key',
+		hint: 'The hotkey used by the GM to set scene to Initial View Position',
+		editable: [
+			{
+				key: 'KeyI',
+				modifiers: ['Control', 'Alt', 'Shift']
+			}
+		],
+		onDown: () => {
+			GamingTablePlayer.pullFocus(game.canvas.scene.initial);
 		},
 		onUp: () => {},
 		restricted: true,
