@@ -276,16 +276,19 @@ class GamingTablePlayer {
 	static async listen() {
 		game.socket.on('module.gaming-table-player', async data => {
 			switch (data.type) {
-				case 'gmPullFocus':
-					if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
-						if (!data.pan.hasOwnProperty('scale')) {
-							data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
-						}
-						GamingTablePlayer.sceneFoci[data.scene_id] = data;
-						if (game.scenes.viewed._id == data.scene_id) {
-							canvas.animatePan(data.pan);
-						}
-						data.type = 'tableBounds';
+case 'gmPullFocus':
+				if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
+					if (!data.pan.hasOwnProperty('scale')) {
+						data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
+					}
+					GamingTablePlayer.sceneFoci[data.scene_id] = data;
+					const sceneMatches = (game.scenes.viewed._id == data.scene_id);
+					GamingTablePlayer.log('gmPullFocus received', { scene_id: data.scene_id, sceneMatches });
+					if (sceneMatches) {
+						canvas.animatePan(data.pan);
+						GamingTablePlayer.log('animatePan called', data.pan);
+					}
+					data.type = 'tableBounds';
 						data.width = window.innerWidth;
 						data.height = window.innerHeight;
 						game.socket.emit('module.gaming-table-player', data);
@@ -317,6 +320,7 @@ class GamingTablePlayer {
 				'pan': mouse,
 				'scene_id': game.scenes.viewed._id
 			});
+			GamingTablePlayer.log('pullFocus emit', { pan: mouse, scene_id: game.scenes.viewed._id });
 		}
 	}
 
