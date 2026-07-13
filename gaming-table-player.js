@@ -8,7 +8,23 @@ class GamingTablePlayer {
 	static Layer;
 	static Container;
 
+	static log(...args) {
+		if (game.settings.get('gaming-table-player', 'debug')) {
+			console.log('gaming-table-player |', ...args);
+		}
+	}
+
 	static initialize() {
+		game.settings.register('gaming-table-player', 'debug', {
+			name: 'Debug Logging',
+			hint: 'Developer toggle — controls console.log diagnostic output. '
+				+ 'Toggle from browser console via '
+				+ 'game.settings.set("gaming-table-player","debug",true).',
+			scope: 'client',
+			config: false,
+			type: Boolean,
+			default: false
+		});
 		game.settings.register('gaming-table-player', 'player', {
 			name: 'Table Player',
 			hint: 'The name of the player who\'s session is being displayed on the gaming table',
@@ -113,7 +129,7 @@ class GamingTablePlayer {
 				GamingTablePlayer.initCanvasLayer();
 			}
 			if (!game.modules.get('lib-wrapper')?.active) {
-				ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
+				ui.notifications.error('Gaming Table Player requires the \'libWrapper\' module. Please install and activate it.');
 			}
 			GamingTablePlayer.listen();
 		} else if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
@@ -357,6 +373,7 @@ Hooks.on('init', () => {
 			}
 		],
 		onDown: () => {
+			GamingTablePlayer.log('onDown fired', 'gamingTablePlayerTargettingHotkey');
 			var mouse = canvas.mousePosition;
 			if (game.settings.get('gaming-table-player', 'focusOnToken')) {
 				if (canvas.tokens.controlled.length == 1) {
@@ -370,6 +387,7 @@ Hooks.on('init', () => {
 		restricted: true,
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
+	GamingTablePlayer.log('keybinding registered', 'gamingTablePlayerTargettingHotkey');
 	game.keybindings.register('gaming-table-player', 'gamingTablePlayerInitialViewHotkey', {
 		name: 'Initial View Key',
 		hint: 'The hotkey used by the GM to set scene to Initial View Position',
@@ -380,12 +398,14 @@ Hooks.on('init', () => {
 			}
 		],
 		onDown: () => {
+			GamingTablePlayer.log('onDown fired', 'gamingTablePlayerInitialViewHotkey');
 			GamingTablePlayer.pullFocus(game.canvas.scene.initial);
 		},
 		onUp: () => {},
 		restricted: true,
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
+	GamingTablePlayer.log('keybinding registered', 'gamingTablePlayerInitialViewHotkey');
 });
 
 Hooks.on('ready', () => {
