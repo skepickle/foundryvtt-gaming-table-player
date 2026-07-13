@@ -155,6 +155,7 @@ class GamingTablePlayer {
 	}
 
 	static async refreshLoop() {
+		try {
 		GamingTablePlayer.refreshTimestamp = Date.now();
 		if (game.user.name != game.settings.get('gaming-table-player', 'player')) {
 			//This should never be reached but try to catch it anyways.
@@ -262,7 +263,9 @@ class GamingTablePlayer {
 				}
 			}
 		}
-		setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
+		} finally {
+			setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
+		}
 	}
 
 	static getPhysicalScale(scene_grid_size) {
