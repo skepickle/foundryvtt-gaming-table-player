@@ -15,16 +15,6 @@ class GamingTablePlayer {
 	}
 
 	static initialize() {
-		game.settings.register('gaming-table-player', 'debug', {
-			name: 'Debug Logging',
-			hint: 'Developer toggle — controls console.log diagnostic output. '
-				+ 'Toggle from browser console via '
-				+ 'game.settings.set("gaming-table-player","debug",true).',
-			scope: 'client',
-			config: false,
-			type: Boolean,
-			default: false
-		});
 		game.settings.register('gaming-table-player', 'player', {
 			name: 'Table Player',
 			hint: 'The name of the player who\'s session is being displayed on the gaming table',
@@ -370,6 +360,16 @@ case 'gmPullFocus':
 }
 
 Hooks.on('init', () => {
+	game.settings.register('gaming-table-player', 'debug', {
+		name: 'Debug Logging',
+		hint: 'Developer toggle — controls console.log diagnostic output. '
+			+ 'Toggle from browser console via '
+			+ 'game.settings.set("gaming-table-player","debug",true).',
+		scope: 'client',
+		config: false,
+		type: Boolean,
+		default: false
+	});
 	game.keybindings.register('gaming-table-player', 'gamingTablePlayerTargettingHotkey', {
 		name: 'Keymap',
 		hint: 'The hotkey used by the GM to pull focus on the gaming table',
