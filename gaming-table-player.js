@@ -318,7 +318,8 @@ class GamingTablePlayer {
 	}
 
 	static async initCanvasLayer() {
-		GamingTablePlayer.Layer = new CanvasLayer();
+		const CanvasLayerClass = foundry?.canvas?.layers?.CanvasLayer ?? CanvasLayer;
+		GamingTablePlayer.Layer = new CanvasLayerClass();
 		GamingTablePlayer.Container = new PIXI.Container();
 		GamingTablePlayer.Layer.addChild(GamingTablePlayer.Container);
 		canvas.stage.addChild(GamingTablePlayer.Layer);
