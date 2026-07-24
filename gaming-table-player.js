@@ -163,7 +163,7 @@ class GamingTablePlayer {
 				let try_again = false;
 				{
 					try {
-						libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing',
+						libWrapper.register('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing',
 							function (wrapped, ...args) {
 								if (args.length >= 3) {
 									args[2].pull = false;
@@ -178,12 +178,12 @@ class GamingTablePlayer {
 				}
 				if (try_again) {
 					try {
-						libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+						libWrapper.unregister('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing');
 					} catch (error) {
 						console.warn('libWrapper.unregister() threw an exception');
 					}
 					try {
-						libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing',
+						libWrapper.register('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing',
 							function (wrapped, ...args) {
 								if (args.length >= 3) {
 									args[2].pull = false;
@@ -200,7 +200,7 @@ class GamingTablePlayer {
 		} else {
 			if (GamingTablePlayer.handlePingIsWrapped) {
 				try {
-					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+					libWrapper.unregister('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing');
 				} catch (error) {
 					console.warn('libWrapper.unregister() threw an exception');
 				}
@@ -318,8 +318,7 @@ class GamingTablePlayer {
 	}
 
 	static async initCanvasLayer() {
-		const CanvasLayerClass = foundry?.canvas?.layers?.CanvasLayer ?? CanvasLayer;
-		GamingTablePlayer.Layer = new CanvasLayerClass();
+		GamingTablePlayer.Layer = new foundry.canvas.layers.CanvasLayer();
 		GamingTablePlayer.Container = new PIXI.Container();
 		GamingTablePlayer.Layer.addChild(GamingTablePlayer.Container);
 		canvas.stage.addChild(GamingTablePlayer.Layer);
