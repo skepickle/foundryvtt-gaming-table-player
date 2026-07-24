@@ -8,6 +8,12 @@ class GamingTablePlayer {
 	static Layer;
 	static Container;
 
+	static log(...args) {
+		if (game.settings.get('gaming-table-player', 'debug')) {
+			console.log('gaming-table-player |', ...args);
+		}
+	}
+
 	static initialize() {
 		game.settings.register('gaming-table-player', 'player', {
 			name: 'Table Player',
@@ -113,7 +119,7 @@ class GamingTablePlayer {
 				GamingTablePlayer.initCanvasLayer();
 			}
 			if (!game.modules.get('lib-wrapper')?.active) {
-				ui.notifications.error('Module XYZ requires the \'libWrapper\' module. Please install and activate it.');
+				ui.notifications.error('Gaming Table Player requires the \'libWrapper\' module. Please install and activate it.');
 			}
 			GamingTablePlayer.listen();
 		} else if (game.user.name == game.settings.get('gaming-table-player', 'player')) {
@@ -139,6 +145,7 @@ class GamingTablePlayer {
 	}
 
 	static async refreshLoop() {
+		try {
 		GamingTablePlayer.refreshTimestamp = Date.now();
 		if (game.user.name != game.settings.get('gaming-table-player', 'player')) {
 			//This should never be reached but try to catch it anyways.
@@ -156,7 +163,7 @@ class GamingTablePlayer {
 				let try_again = false;
 				{
 					try {
-						libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing',
+						libWrapper.register('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing',
 							function (wrapped, ...args) {
 								if (args.length >= 3) {
 									args[2].pull = false;
@@ -171,12 +178,12 @@ class GamingTablePlayer {
 				}
 				if (try_again) {
 					try {
-						libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+						libWrapper.unregister('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing');
 					} catch (error) {
 						console.warn('libWrapper.unregister() threw an exception');
 					}
 					try {
-						libWrapper.register('gaming-table-player', 'ControlsLayer.prototype.handlePing',
+						libWrapper.register('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing',
 							function (wrapped, ...args) {
 								if (args.length >= 3) {
 									args[2].pull = false;
@@ -193,7 +200,7 @@ class GamingTablePlayer {
 		} else {
 			if (GamingTablePlayer.handlePingIsWrapped) {
 				try {
-					libWrapper.unregister('gaming-table-player', 'ControlsLayer.prototype.handlePing');
+					libWrapper.unregister('gaming-table-player', 'foundry.canvas.layers.ControlsLayer.prototype.handlePing');
 				} catch (error) {
 					console.warn('libWrapper.unregister() threw an exception');
 				}
@@ -246,7 +253,9 @@ class GamingTablePlayer {
 				}
 			}
 		}
-		setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
+		} finally {
+			setTimeout(GamingTablePlayer.refreshLoop, game.settings.get('gaming-table-player', 'refreshPeriod'));
+		}
 	}
 
 	static getPhysicalScale(scene_grid_size) {
@@ -266,8 +275,11 @@ class GamingTablePlayer {
 							data.pan.scale = GamingTablePlayer.getPhysicalScale(game.scenes.get(data.scene_id).grid.size);
 						}
 						GamingTablePlayer.sceneFoci[data.scene_id] = data;
-						if (game.scenes.viewed._id == data.scene_id) {
+						const sceneMatches = (game.scenes.viewed._id == data.scene_id);
+						GamingTablePlayer.log('gmPullFocus received', { scene_id: data.scene_id, sceneMatches });
+						if (sceneMatches) {
 							canvas.animatePan(data.pan);
+							GamingTablePlayer.log('animatePan called', data.pan);
 						}
 						data.type = 'tableBounds';
 						data.width = window.innerWidth;
@@ -301,11 +313,12 @@ class GamingTablePlayer {
 				'pan': mouse,
 				'scene_id': game.scenes.viewed._id
 			});
+			GamingTablePlayer.log('pullFocus emit', { pan: mouse, scene_id: game.scenes.viewed._id });
 		}
 	}
 
 	static async initCanvasLayer() {
-		GamingTablePlayer.Layer = new CanvasLayer();
+		GamingTablePlayer.Layer = new foundry.canvas.layers.CanvasLayer();
 		GamingTablePlayer.Container = new PIXI.Container();
 		GamingTablePlayer.Layer.addChild(GamingTablePlayer.Container);
 		canvas.stage.addChild(GamingTablePlayer.Layer);
@@ -347,6 +360,16 @@ class GamingTablePlayer {
 }
 
 Hooks.on('init', () => {
+	game.settings.register('gaming-table-player', 'debug', {
+		name: 'Debug Logging',
+		hint: 'Developer toggle — controls console.log diagnostic output. '
+			+ 'Toggle from browser console via '
+			+ 'game.settings.set("gaming-table-player","debug",true).',
+		scope: 'client',
+		config: false,
+		type: Boolean,
+		default: false
+	});
 	game.keybindings.register('gaming-table-player', 'gamingTablePlayerTargettingHotkey', {
 		name: 'Keymap',
 		hint: 'The hotkey used by the GM to pull focus on the gaming table',
@@ -357,6 +380,7 @@ Hooks.on('init', () => {
 			}
 		],
 		onDown: () => {
+			GamingTablePlayer.log('onDown fired', 'gamingTablePlayerTargettingHotkey');
 			var mouse = canvas.mousePosition;
 			if (game.settings.get('gaming-table-player', 'focusOnToken')) {
 				if (canvas.tokens.controlled.length == 1) {
@@ -370,6 +394,7 @@ Hooks.on('init', () => {
 		restricted: true,
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
+	GamingTablePlayer.log('keybinding registered', 'gamingTablePlayerTargettingHotkey');
 	game.keybindings.register('gaming-table-player', 'gamingTablePlayerInitialViewHotkey', {
 		name: 'Initial View Key',
 		hint: 'The hotkey used by the GM to set scene to Initial View Position',
@@ -380,12 +405,14 @@ Hooks.on('init', () => {
 			}
 		],
 		onDown: () => {
+			GamingTablePlayer.log('onDown fired', 'gamingTablePlayerInitialViewHotkey');
 			GamingTablePlayer.pullFocus(game.canvas.scene.initial);
 		},
 		onUp: () => {},
 		restricted: true,
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
+	GamingTablePlayer.log('keybinding registered', 'gamingTablePlayerInitialViewHotkey');
 });
 
 Hooks.on('ready', () => {

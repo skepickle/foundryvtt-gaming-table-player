@@ -10,22 +10,15 @@
 		}
 	],
 	"compatibility": {
-		"minimum": "11",
-		"verified": "13",
-		"maximum": "13"
+		"minimum": "13",
+		"verified": "14",
+		"maximum": "14"
 	},
 	"scripts": [
 		"gaming-table-player.js"
 	],
 	"relationships": {
 		"requires": [
-			{
-				"id": "settings-extender",
-				"type": "module",
-				"compatibility": {
-					"verified": "1.2.3"
-				}
-			},
 			{
 				"id": "lib-wrapper",
 				"type": "module",
